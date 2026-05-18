@@ -1,8 +1,12 @@
+import {
+  CURRENT_SAVE_VERSION,
+  migrateSaveRecord,
+} from "./saveMigration";
+
 export const SAVE_SLOT_COUNT = 10;
 
 const SAVE_KEY_PREFIX = "new-untitled-game-save-slot";
 const LAST_USED_SLOT_KEY = "new-untitled-game-last-used-slot";
-const SAVE_VERSION = 1;
 
 function getSlotKey(slotId) {
   return `${SAVE_KEY_PREFIX}-${slotId}`;
@@ -10,7 +14,7 @@ function getSlotKey(slotId) {
 
 function createSaveRecord(state) {
   return {
-    version: SAVE_VERSION,
+    version: CURRENT_SAVE_VERSION,
     savedAt: new Date().toISOString(),
     state,
   };
@@ -45,9 +49,15 @@ export function loadGameFromSlot(slotId) {
     return null;
   }
 
+  const migratedState = migrateSaveRecord(saveRecord);
+
+  if (!migratedState) {
+    return null;
+  }
+
   localStorage.setItem(LAST_USED_SLOT_KEY, String(slotId));
 
-  return saveRecord.state || null;
+  return migratedState;
 }
 
 export function loadLastUsedSave() {
@@ -84,12 +94,13 @@ export function getSaveSlotSummaries() {
   for (let slotId = 1; slotId <= SAVE_SLOT_COUNT; slotId += 1) {
     const rawSave = localStorage.getItem(getSlotKey(slotId));
     const saveRecord = rawSave ? safelyParseSave(rawSave) : null;
-    const savedState = saveRecord?.state;
+    const savedState = saveRecord ? migrateSaveRecord(saveRecord) : null;
 
     summaries.push({
       slotId,
       hasSave: Boolean(savedState),
       savedAt: saveRecord?.savedAt || null,
+      version: saveRecord?.version || 0,
       playerName: savedState?.player?.name || null,
       level: savedState?.player?.level || null,
       areaId: savedState?.player?.area || null,
