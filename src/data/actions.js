@@ -31,8 +31,7 @@ export const actions = [
     rewards: {
       herbs: 1,
     },
-    log: "You explore the nearby forest edge.",
-    story: "You found a small bundle of useful herbs near the forest edge.",
+    log: "You explore the nearby forest edge and gather herbs.",
   },
 
   {

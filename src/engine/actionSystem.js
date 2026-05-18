@@ -69,6 +69,39 @@ function getActionCosts(action) {
   };
 }
 
+function formatStatName(stat) {
+  const statNames = {
+    hp: "health",
+    mp: "mana",
+    stamina: "stamina",
+  };
+
+  return statNames[stat] || stat;
+}
+
+function getMissingStatCosts(player, statCost = {}) {
+  return Object.entries(statCost)
+    .filter(([stat, amount]) => {
+      return typeof player[stat] === "number" && player[stat] < amount;
+    })
+    .map(([stat]) => formatStatName(stat));
+}
+
+function getMissingStatMessage(missingStats) {
+  if (missingStats.length === 0) {
+    return "Not enough status points.";
+  }
+
+  if (missingStats.length === 1) {
+    return `Not enough ${missingStats[0]}.`;
+  }
+
+  const lastStat = missingStats[missingStats.length - 1];
+  const otherStats = missingStats.slice(0, -1).join(", ");
+
+  return `Not enough ${otherStats} and ${lastStat}.`;
+}
+
 export function performAction(currentState, action) {
   const nextState = clone(currentState);
 
@@ -119,9 +152,12 @@ export function performAction(currentState, action) {
   const { statCost, resourceCost } = getActionCosts(action);
 
   if (!canPayStatCost(nextState.player, statCost)) {
+    const missingStats = getMissingStatCosts(nextState.player, statCost);
+    const missingStatMessage = getMissingStatMessage(missingStats);
+
     nextState.actionLog = addLog(
       nextState.actionLog,
-      getActionLog(action, "Not enough status points.")
+      getActionLog(action, missingStatMessage)
     );
 
     return nextState;

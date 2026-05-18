@@ -9,11 +9,19 @@ export function processStoryEvents(state, storyEvents = []) {
     if (alreadyCompleted) return;
     if (!event.condition(state)) return;
 
-    state.storyLog = addLog(state.storyLog, event.text);
+    const eventText =
+      typeof event.text === "function" ? event.text(state) : event.text;
+
+    if (eventText) {
+      state.storyLog = addLog(state.storyLog, eventText);
+    }
+
     state.completedStoryEvents.push(event.id);
 
     if (event.setFlags) {
       Object.assign(state.flags, event.setFlags);
     }
   });
+
+  return state;
 }
