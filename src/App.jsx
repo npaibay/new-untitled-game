@@ -38,6 +38,8 @@ function App() {
   const discoveredAreas = getDiscoveredAreas(areas);
   const availableActions = getAvailableActions(actions, player.area);
   const discoveredResources = getDiscoveredResources(resources);
+  const latestStoryBeat = storyLog[0] || "No major story events yet.";
+  const currentAreaActions = availableActions.map((action) => action.label)
 
   useEffect(() => {
     let lastTime = Date.now();
@@ -212,17 +214,30 @@ function App() {
             </Panel>
 
             <section className="panel story-panel">
-              <h1>{currentAreaLabel}</h1>
+              <div className="scene-header-block">
+                <h1>{currentAreaLabel}</h1>
 
-              <p>
-                {currentArea?.description ||
-                  "You are somewhere unfamiliar. The path ahead is unclear."}
-              </p>
+                <p>
+                  {currentArea?.description ||
+                    "You are somewhere unfamiliar. The path ahead is unclear."}
+                </p>
+              </div>
 
-              <div className="choices">
-                <button type="button" className="primary">
-                  Begin
-                </button>
+              <div className="scene-detail-grid">
+                <article className="scene-card scene-card-large">
+                  <h3>Latest Story Beat</h3>
+                  <p>{latestStoryBeat}</p>
+                </article>
+
+                <article className="scene-card">
+                  <h3>Available Actions</h3>
+                  
+                  {currentAreaActions.length > 0 ? (
+                    <p>{currentAreaActions.join(" . ")}</p>
+                  ) : (
+                    <p>No actions available here.</p>
+                  )}
+                </article>
               </div>
             </section>
           </div>

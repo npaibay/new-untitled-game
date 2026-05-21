@@ -67,13 +67,18 @@ button {
 }
 
 button:hover {
-  border-color: rgba(127, 163, 255, 0.42);
+  border-color: rgba(212, 212, 216, 0.42);
   color: var(--text);
   box-shadow: 0 0 0 1px var(--accent-glow);
 }
 
 button:active {
   transform: translateY(1px);
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
 }
 
 button.primary {
@@ -206,10 +211,13 @@ button.primary {
   align-items: center;
 }
 
+/* ─── Scene panel ───────────────────────────────────────── */
+
 .story-panel {
   padding: 20px;
   display: grid;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 18px;
 }
 
 .story-panel h1 {
@@ -221,17 +229,53 @@ button.primary {
 
 .story-panel p {
   margin: 0;
-  max-width: 760px;
   color: var(--text-sub);
   line-height: 1.8;
   font-size: 0.9rem;
 }
 
-.choices {
-  margin-top: 16px;
-  display: grid;
-  gap: 8px;
+.scene-header-block {
+  min-width: 0;
 }
+
+.scene-header-block p {
+  max-width: 760px;
+}
+
+.scene-detail-grid {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 10px;
+  align-content: start;
+}
+
+.scene-card {
+  min-width: 0;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.02);
+  padding: 14px;
+}
+
+.scene-card h3 {
+  margin: 0 0 10px;
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.scene-card p {
+  max-width: none;
+  font-size: 0.82rem;
+}
+
+.scene-card-large {
+  min-height: 110px;
+}
+
+/* ─── Logs ──────────────────────────────────────────────── */
 
 .log-list {
   height: 100%;
@@ -253,6 +297,8 @@ button.primary {
 .log-list li:first-child {
   color: var(--text);
 }
+
+/* ─── Character / resources panel ───────────────────────── */
 
 .stats-panel {
   display: grid;
@@ -307,6 +353,19 @@ button.primary {
   font-size: 0.78rem;
 }
 
+.gold-text {
+  color: var(--gold) !important;
+}
+
+.empty-note {
+  margin: 8px 0 0;
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+
+/* ─── Status bars ───────────────────────────────────────── */
+
 .stat-meter {
   padding: 8px 0 10px;
   border-bottom: 1px solid var(--line-soft);
@@ -334,17 +393,6 @@ button.primary {
 .stat-meter-top strong {
   color: var(--text);
   font-size: 0.78rem;
-}
-
-.gold-text {
-  color: var(--gold) !important;
-}
-
-.empty-note {
-  margin: 8px 0 0;
-  color: var(--text-muted);
-  font-size: 0.76rem;
-  line-height: 1.5;
 }
 
 .stat-track {
@@ -375,6 +423,8 @@ button.primary {
   background: #22c55e;
   box-shadow: 0 0 8px rgba(34, 197, 94, 0.25);
 }
+
+/* ─── Save modal ────────────────────────────────────────── */
 
 .modal-backdrop {
   position: fixed;
@@ -465,10 +515,7 @@ button.primary {
   justify-content: flex-end;
 }
 
-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
-}
+/* ─── Responsive ────────────────────────────────────────── */
 
 @media (max-width: 1100px) {
   body {
@@ -487,7 +534,8 @@ button:disabled {
 
   .game-layout,
   .play-row,
-  .log-row {
+  .log-row,
+  .scene-detail-grid {
     grid-template-columns: 1fr;
   }
 
