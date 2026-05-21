@@ -1,5 +1,6 @@
 import { storyEvents } from "../data/storyEvents";
 import { processStoryEvents } from "./storySystem";
+import { recordAreaVisit } from "./progressSystem";
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
@@ -18,6 +19,8 @@ export function moveToArea(currentState, area) {
   }
 
   nextState.player.area = area.id;
+  recordAreaVisit(nextState.progress, area);
+
   nextState.actionLog = addLog(
     nextState.actionLog,
     `Moved to: ${area.label}`

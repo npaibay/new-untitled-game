@@ -10,6 +10,7 @@ import {
   restoreStats,
 } from "./statSystem";
 import { processStoryEvents } from "./storySystem";
+import { recordActionProgress } from "./progressSystem";
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
@@ -177,6 +178,8 @@ export function performAction(currentState, action) {
 
   restoreStats(nextState.player, action.restore);
   addResources(nextState.resources, action.rewards);
+
+  recordActionProgress(nextState.progress, action);
 
   nextState.actionLog = addLog(
     nextState.actionLog,

@@ -19,4 +19,27 @@ export const storyEvents = [
     text:
       "Your body grows heavy from exhaustion. Even determination has its limits.",
   },
+  
+  {
+  id: "explored_forest_three_times",
+  condition: (state) =>
+    (state.progress.actionCounts.explore_forest_edge || 0) >= 3,
+  text:
+    "The forest edge begins to feel less unfamiliar. You notice small paths hidden between the trees.",
+  },
+
+  {
+    id: "visited_home_three_times",
+    condition: (state) =>
+      (state.progress.areaVisits.stonefield_house || 0) >= 3,
+    text:
+      "Each return home reminds you that even small moments of rest can become part of your strength.",
+  },
+
+  {
+    id: "used_ten_actions",
+    condition: (state) => state.progress.totalActions >= 10,
+    text:
+      "Little by little, your days begin to form a rhythm. Small choices are becoming the shape of your journey.",
+  },
 ];

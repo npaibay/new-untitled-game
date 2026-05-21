@@ -15,5 +15,13 @@ export function createGameState() {
 
     flags: {},
     completedStoryEvents: [],
+
+    progress: {
+      totalActions: 0,
+      actionCounts: {},
+      areaVisits: {
+        [defaultPlayer.area]: 1,
+      },
+    },
   };
 }
