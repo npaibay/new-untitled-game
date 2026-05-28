@@ -3,6 +3,7 @@ import { processGameTick } from "./engine/tickSystem";
 
 import { actions } from "./data/actions";
 import { areas } from "./data/areas";
+import { upgrades } from "./data/upgrades";
 
 import { createGameState } from "./engine/createGameState";
 import { performAction } from "./engine/actionSystem";
@@ -22,6 +23,13 @@ import {
   loadLastUsedSave,
   saveGameToSlot,
 } from "./engine/saveSystem";
+import {
+  formatResourceCost,
+  getNextUpgradeCost,
+  getUpgradeLevel,
+  isUpgradeMaxed,
+  purchaseUpgrade,
+} from "./engine/upgradeSystem";
 
 function App() {
   const [gameState, setGameState] = useState(() => {
@@ -82,6 +90,10 @@ function App() {
 
   function closeModal() {
     setActiveModal(null);
+  }
+
+  function handlePurchaseUpgrade(upgrade) {
+    setGameState((currentState) => purchaseUpgrade(currentState, upgrade));
   }
 
   function handleMoveToArea(area) {
@@ -360,6 +372,43 @@ function App() {
               {discoveredResources.length === 0 && (
                 <p className="empty-note">No other resources discovered.</p>
               )}
+            </InfoGroup>
+
+            <InfoGroup title="Upgrades">
+              <div className="upgrade-list">
+                {upgrades.map((upgrade) => {
+                  const level = getUpgradeLevel(gameState, upgrade.id);
+                  const maxed = isUpgradeMaxed(gameState, upgrade);
+                  const cost = getNextUpgradeCost(gameState, upgrade);
+
+                  return (
+                    <div key={upgrade.id} className="upgrade-card">
+                      <div className="upgrade-card-header">
+                        <strong>{upgrade.label}</strong>
+                        <span>
+                          Lv. {level}/{upgrade.maxLevel}
+                        </span>
+                      </div>
+
+                      <p>{upgrade.description}</p>
+
+                      <div className="upgrade-card-footer">
+                        <span>
+                          {maxed ? "Maxed" : `Cost: ${formatResourceCost(cost, resources)}`}
+                        </span>
+
+                        <button
+                          type="button"
+                          disabled={maxed}
+                          onClick={() => handlePurchaseUpgrade(upgrade)}
+                        >
+                          {maxed ? "Max" : "Upgrade"}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </InfoGroup>
           </div>
         </aside>

@@ -410,6 +410,55 @@ button.primary {
   line-height: 1.5;
 }
 
+/* ─── Upgrade Details ───────────────────────────────────── */
+
+.upgrade-list {
+  display: grid;
+  gap: 8px;
+}
+
+.upgrade-card {
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.02);
+  padding: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.upgrade-card-header,
+.upgrade-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.upgrade-card-header strong {
+  color: var(--text);
+  font-size: 0.74rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.upgrade-card-header span,
+.upgrade-card-footer span {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+}
+
+.upgrade-card p {
+  margin: 0;
+  color: var(--text-sub);
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+
+.upgrade-card-footer button {
+  padding: 6px 10px;
+  font-size: 0.68rem;
+}
+
 /* ─── Status bars ───────────────────────────────────────── */
 
 .stat-meter {

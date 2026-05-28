@@ -28,6 +28,10 @@ export function createGameState() {
     flags: {},
     completedStoryEvents: [],
 
+    upgrades: {
+      levels: {},
+    },
+
     progress: {
       totalActions: 0,
       actionCounts: {},
