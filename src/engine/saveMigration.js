@@ -1,6 +1,6 @@
 import { createGameState } from "./createGameState";
 
-export const CURRENT_SAVE_VERSION = 1;
+export const CURRENT_SAVE_VERSION = 2;
 
 function isPlainObject(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value);
@@ -8,6 +8,7 @@ function isPlainObject(value) {
 
 function clone(value) {
   if (value === undefined) return undefined;
+
   return JSON.parse(JSON.stringify(value));
 }
 
@@ -22,8 +23,8 @@ function mergeWithDefaults(defaultValue, savedValue) {
 
   if (isPlainObject(defaultValue)) {
     const merged = {};
-
     const savedObject = isPlainObject(savedValue) ? savedValue : {};
+
     const keys = new Set([
       ...Object.keys(defaultValue),
       ...Object.keys(savedObject),

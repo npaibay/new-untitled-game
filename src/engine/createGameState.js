@@ -2,6 +2,7 @@ import { actions } from "../data/actions";
 import { areas } from "../data/areas";
 import { defaultPlayer } from "../data/defaultPlayer";
 import { defaultResources } from "../data/defaultResources";
+import { starterEquipment, starterInventory } from "../data/items";
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
@@ -21,6 +22,9 @@ export function createGameState() {
   return {
     player: clone(defaultPlayer),
     resources: clone(defaultResources),
+
+    inventory: clone(starterInventory),
+    equipment: clone(starterEquipment),
 
     actionLog: ["Prototype initialized."],
     storyLog: ["Story shell loaded."],

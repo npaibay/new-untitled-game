@@ -1,3 +1,4 @@
+import { createGameState } from "./createGameState";
 import {
   CURRENT_SAVE_VERSION,
   migrateSaveRecord,
@@ -29,6 +30,78 @@ function safelyParseSave(rawSave) {
   }
 }
 
+function mergeObjectDefaults(defaultValue, savedValue) {
+  return {
+    ...defaultValue,
+    ...(savedValue || {}),
+  };
+}
+
+function normalizeGameState(state) {
+  if (!state) {
+    return null;
+  }
+
+  const defaultState = createGameState();
+
+  return {
+    ...defaultState,
+    ...state,
+
+    player: mergeObjectDefaults(defaultState.player, state.player),
+    resources: mergeObjectDefaults(defaultState.resources, state.resources),
+
+    inventory: {
+      ...defaultState.inventory,
+      ...(state.inventory || {}),
+      items: state.inventory?.items || defaultState.inventory.items,
+    },
+
+    equipment: mergeObjectDefaults(defaultState.equipment, state.equipment),
+
+    flags: mergeObjectDefaults(defaultState.flags, state.flags),
+    completedStoryEvents:
+      state.completedStoryEvents || defaultState.completedStoryEvents,
+
+    upgrades: {
+      ...defaultState.upgrades,
+      ...(state.upgrades || {}),
+      levels: {
+        ...defaultState.upgrades.levels,
+        ...(state.upgrades?.levels || {}),
+      },
+    },
+
+    progress: {
+      ...defaultState.progress,
+      ...(state.progress || {}),
+      actionCounts: {
+        ...defaultState.progress.actionCounts,
+        ...(state.progress?.actionCounts || {}),
+      },
+      areaVisits: {
+        ...defaultState.progress.areaVisits,
+        ...(state.progress?.areaVisits || {}),
+      },
+    },
+
+    unlocks: {
+      ...defaultState.unlocks,
+      ...(state.unlocks || {}),
+      areas: {
+        ...defaultState.unlocks.areas,
+        ...(state.unlocks?.areas || {}),
+      },
+      actions: {
+        ...defaultState.unlocks.actions,
+        ...(state.unlocks?.actions || {}),
+      },
+      completedRules:
+        state.unlocks?.completedRules || defaultState.unlocks.completedRules,
+    },
+  };
+}
+
 export function saveGameToSlot(slotId, state) {
   const saveRecord = createSaveRecord(state);
 
@@ -50,14 +123,15 @@ export function loadGameFromSlot(slotId) {
   }
 
   const migratedState = migrateSaveRecord(saveRecord);
+  const normalizedState = normalizeGameState(migratedState);
 
-  if (!migratedState) {
+  if (!normalizedState) {
     return null;
   }
 
   localStorage.setItem(LAST_USED_SLOT_KEY, String(slotId));
 
-  return migratedState;
+  return normalizedState;
 }
 
 export function loadLastUsedSave() {
@@ -94,7 +168,8 @@ export function getSaveSlotSummaries() {
   for (let slotId = 1; slotId <= SAVE_SLOT_COUNT; slotId += 1) {
     const rawSave = localStorage.getItem(getSlotKey(slotId));
     const saveRecord = rawSave ? safelyParseSave(rawSave) : null;
-    const savedState = saveRecord ? migrateSaveRecord(saveRecord) : null;
+    const migratedState = saveRecord ? migrateSaveRecord(saveRecord) : null;
+    const savedState = normalizeGameState(migratedState);
 
     summaries.push({
       slotId,

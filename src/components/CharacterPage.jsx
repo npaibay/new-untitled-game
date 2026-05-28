@@ -1,3 +1,4 @@
+import { items } from "../data/items";
 import {
   formatResourceCost,
   getNextUpgradeCost,
@@ -7,6 +8,21 @@ import {
 import { formatRegenValue } from "../utils/formatters";
 import InfoRow from "./ui/InfoRow";
 import StatMeter from "./ui/StatMeter";
+
+const equipmentSlots = [
+  {
+    id: "weapon",
+    label: "Weapon",
+  },
+  {
+    id: "body",
+    label: "Body",
+  },
+  {
+    id: "accessory",
+    label: "Accessory",
+  },
+];
 
 function CharacterPage({
   player,
@@ -18,11 +34,16 @@ function CharacterPage({
   onChangeTab,
   onPurchaseUpgrade,
 }) {
+  const itemMap = new Map(items.map((item) => [item.id, item]));
+
   const discoveredResources = Object.entries(resources).filter(
     ([resourceId, resource]) => {
       return resourceId !== "gold" && resource.discovered;
     }
   );
+
+  const inventoryItems = gameState.inventory?.items || [];
+  const equipment = gameState.equipment || {};
 
   return (
     <section className="character-page-panel">
@@ -177,22 +198,94 @@ function CharacterPage({
 
         {activeTab === "items" && (
           <>
-            <section className="character-card">
-              <h3>Equippable Items</h3>
-              <p className="empty-note">No equippable items discovered yet.</p>
+            <section className="character-card character-card-wide">
+              <h3>Equipment</h3>
+
+              <div className="equipment-grid">
+                {equipmentSlots.map((slot) => {
+                  const equippedItemId = equipment[slot.id];
+                  const equippedItem = itemMap.get(equippedItemId);
+
+                  return (
+                    <div key={slot.id} className="equipment-slot">
+                      <span className="equipment-slot-label">
+                        {slot.label}
+                      </span>
+
+                      {equippedItem ? (
+                        <>
+                          <strong>{equippedItem.label}</strong>
+                          <p>{equippedItem.description}</p>
+                        </>
+                      ) : (
+                        <>
+                          <strong>Empty</strong>
+                          <p>No item equipped in this slot.</p>
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </section>
 
-            <section className="character-card">
+            <section className="character-card character-card-wide">
               <h3>Inventory</h3>
-              <p className="empty-note">
-                Materials, key items, and equipment will appear here later.
-              </p>
+
+              {inventoryItems.length > 0 ? (
+                <div className="inventory-list">
+                  {inventoryItems.map((entry) => {
+                    const itemId = entry.itemId || entry.id;
+                    const item = itemMap.get(itemId);
+                    const quantity = entry.quantity ?? 1;
+
+                    if (!item) {
+                      return (
+                        <div key={itemId} className="inventory-item">
+                          <div>
+                            <strong>{itemId}</strong>
+                            <p>Unknown item.</p>
+                          </div>
+
+                          <span className="item-type-pill">x{quantity}</span>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div key={item.id} className="inventory-item">
+                        <div>
+                          <strong>{item.label}</strong>
+                          <p>{item.description}</p>
+                        </div>
+
+                        <div className="inventory-item-meta">
+                          <span className="item-type-pill">
+                            {formatItemType(item)}
+                          </span>
+                          <span className="item-type-pill">x{quantity}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="empty-note">No items discovered yet.</p>
+              )}
             </section>
           </>
         )}
       </div>
     </section>
   );
+}
+
+function formatItemType(item) {
+  if (item.type === "equipment" && item.slot) {
+    return item.slot;
+  }
+
+  return item.type || "item";
 }
 
 export default CharacterPage;
