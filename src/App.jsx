@@ -39,6 +39,8 @@ function App() {
   const [activeModal, setActiveModal] = useState(null);
   const [saveSlots, setSaveSlots] = useState(() => getSaveSlotSummaries());
   const [selectedActionId, setSelectedActionId] = useState(null);
+  const [activePage, setActivePage] = useState("main");
+  const [characterTab, setCharacterTab] = useState("overview");
 
   const { player, resources, actionLog, storyLog, unlocks } = gameState;
 
@@ -145,6 +147,8 @@ function App() {
     const resetState = createGameState();
 
     setSelectedActionId(null);
+    setActivePage("main");
+    setCharacterTab("overview");
     setGameState(addSystemLog(resetState, "Current game reset."));
     closeModal();
   }
@@ -155,6 +159,8 @@ function App() {
     const resetState = createGameState();
 
     setSelectedActionId(null);
+    setActivePage("main");
+    setCharacterTab("overview");
     setGameState(addSystemLog(resetState, "All save slots deleted."));
     refreshSaveSlots();
     closeModal();
@@ -164,18 +170,36 @@ function App() {
     <div className="app">
       <header className="topbar">
         <nav className="nav-tabs" aria-label="Main navigation">
-          <button className="nav-btn active" type="button">
+          <button
+            className={activePage === "main" ? "nav-btn active" : "nav-btn"}
+            type="button"
+            onClick={() => setActivePage("main")}
+          >
             Main
           </button>
+
+          <button
+            className={
+              activePage === "character" ? "nav-btn active" : "nav-btn"
+            }
+            type="button"
+            onClick={() => setActivePage("character")}
+          >
+            Character
+          </button>
+
           <button className="nav-btn" type="button">
             Story
           </button>
+
           <button className="nav-btn" type="button">
             Relationships
           </button>
+
           <button className="nav-btn" type="button">
             Party
           </button>
+
           <button className="nav-btn" type="button">
             Codex
           </button>
@@ -204,134 +228,262 @@ function App() {
         </div>
       </header>
 
-      <main className="game-layout">
-        <section className="main-column">
-          <div className="play-row">
-            <Panel title="Areas">
-              <div className="area-group-list">
-                {discoveredAreaGroups.map((group) => (
-                  <div key={group.category} className="area-group">
-                    <h3>{group.category}</h3>
+      <main
+        className={
+          activePage === "character"
+            ? "game-layout character-layout"
+            : "game-layout"
+        }
+      >
+        {activePage === "main" ? (
+          <>
+            <MainPage
+              player={player}
+              resources={resources}
+              actionLog={actionLog}
+              storyLog={storyLog}
+              currentArea={currentArea}
+              currentAreaLabel={currentAreaLabel}
+              discoveredAreaGroups={discoveredAreaGroups}
+              availableActions={availableActions}
+              selectedAction={selectedAction}
+              latestStoryBeat={latestStoryBeat}
+              currentAreaActions={currentAreaActions}
+              onMoveToArea={handleMoveToArea}
+              onAction={handleAction}
+              onSelectAction={setSelectedActionId}
+            />
 
-                    <div className="button-list area-button-list">
-                      {group.areas.map((area) => (
-                        <button
-                          key={area.id}
-                          type="button"
-                          className={area.id === player.area ? "primary" : ""}
-                          onClick={() => handleMoveToArea(area)}
-                        >
-                          {area.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Panel>
+            <QuickOverviewSidebar
+              player={player}
+              resources={resources}
+              discoveredResources={discoveredResources}
+            />
+          </>
+        ) : (
+          <CharacterPage
+            player={player}
+            resources={resources}
+            gameState={gameState}
+            currentAreaLabel={currentAreaLabel}
+            upgrades={upgrades}
+            activeTab={characterTab}
+            onChangeTab={setCharacterTab}
+            onPurchaseUpgrade={handlePurchaseUpgrade}
+          />
+        )}
+      </main>
 
-            <Panel title="Actions" className="actions-panel">
-              <div className="action-panel-body">
-                <div className="button-list action-list-scroll">
-                  {availableActions.map((action) => {
-                    const isRestingAction = action.startsResting && player.isResting;
-                    const isSelected = selectedAction?.id === action.id;
+      {activeModal && (
+        <SaveSlotModal
+          mode={activeModal}
+          slots={saveSlots}
+          onClose={closeModal}
+          onSave={handleSaveToSlot}
+          onLoad={handleLoadFromSlot}
+          onDeleteSlot={handleDeleteSlot}
+          onResetCurrentGame={handleResetCurrentGame}
+          onDeleteAllSaves={handleDeleteAllSaves}
+        />
+      )}
+    </div>
+  );
+}
 
-                    return (
-                      <button
-                        key={action.id}
-                        type="button"
-                        className={isRestingAction || isSelected ? "primary" : ""}
-                        disabled={isRestingAction}
-                        onMouseEnter={() => setSelectedActionId(action.id)}
-                        onFocus={() => setSelectedActionId(action.id)}
-                        onClick={() => handleAction(action)}
-                      >
-                        {isRestingAction ? "Resting..." : action.label}
-                      </button>
-                    );
-                  })}
+function MainPage({
+  player,
+  resources,
+  actionLog,
+  storyLog,
+  currentArea,
+  currentAreaLabel,
+  discoveredAreaGroups,
+  availableActions,
+  selectedAction,
+  latestStoryBeat,
+  currentAreaActions,
+  onMoveToArea,
+  onAction,
+  onSelectAction,
+}) {
+  return (
+    <section className="main-column">
+      <div className="play-row">
+        <Panel title="Areas">
+          <div className="area-group-list">
+            {discoveredAreaGroups.map((group) => (
+              <div key={group.category} className="area-group">
+                <h3>{group.category}</h3>
 
-                  {availableActions.length === 0 && (
-                    <p className="empty-note">No actions available here.</p>
-                  )}
+                <div className="button-list area-button-list">
+                  {group.areas.map((area) => (
+                    <button
+                      key={area.id}
+                      type="button"
+                      className={area.id === player.area ? "primary" : ""}
+                      onClick={() => onMoveToArea(area)}
+                    >
+                      {area.label}
+                    </button>
+                  ))}
                 </div>
-
-                <ActionDetails action={selectedAction} resources={resources} />
               </div>
-            </Panel>
+            ))}
+          </div>
+        </Panel>
 
-            <section className="panel story-panel">
-              <div className="scene-header-block">
-                <h1>{currentAreaLabel}</h1>
+        <Panel title="Actions" className="actions-panel">
+          <div className="action-panel-body">
+            <div className="button-list action-list-scroll">
+              {availableActions.map((action) => {
+                const isRestingAction =
+                  action.startsResting && player.isResting;
+                const isSelected = selectedAction?.id === action.id;
 
-                <p>
-                  {currentArea?.description ||
-                    "You are somewhere unfamiliar. The path ahead is unclear."}
-                </p>
-              </div>
+                return (
+                  <button
+                    key={action.id}
+                    type="button"
+                    className={isRestingAction || isSelected ? "primary" : ""}
+                    disabled={isRestingAction}
+                    onMouseEnter={() => onSelectAction(action.id)}
+                    onFocus={() => onSelectAction(action.id)}
+                    onClick={() => onAction(action)}
+                  >
+                    {isRestingAction ? "Resting..." : action.label}
+                  </button>
+                );
+              })}
 
-              <div className="scene-dashboard">
-                <article className="scene-card scene-card-large">
-                  <h3>Latest Story Beat</h3>
-                  <p>{latestStoryBeat}</p>
-                </article>
+              {availableActions.length === 0 && (
+                <p className="empty-note">No actions available here.</p>
+              )}
+            </div>
 
-                <article className="scene-card">
-                  <h3>Available Actions</h3>
+            <ActionDetails action={selectedAction} resources={resources} />
+          </div>
+        </Panel>
 
-                  {currentAreaActions.length > 0 ? (
-                    <div className="scene-action-chips">
-                      {currentAreaActions.map((actionLabel) => (
-                        <span key={actionLabel}>{actionLabel}</span>
-                      ))}
-                    </div>
-                  ) : (
-                    <p>No actions available here.</p>
-                  )}
-                </article>
+        <section className="panel story-panel">
+          <div className="scene-header-block">
+            <h1>{currentAreaLabel}</h1>
 
-                <article className="scene-card">
-                  <h3>Area Type</h3>
-                  <p>{currentArea?.category || "Unknown"}</p>
-                </article>
-              </div>
-            </section>
+            <p>
+              {currentArea?.description ||
+                "You are somewhere unfamiliar. The path ahead is unclear."}
+            </p>
           </div>
 
-          <div className="log-row">
-            <Panel title="Action Log">
-              <ul className="log-list">
-                {actionLog.map((entry, index) => (
-                  <li key={`${entry}-${index}`}>{entry}</li>
-                ))}
-              </ul>
-            </Panel>
+          <div className="scene-dashboard">
+            <article className="scene-card scene-card-large">
+              <h3>Latest Story Beat</h3>
+              <p>{latestStoryBeat}</p>
+            </article>
 
-            <Panel title="Story Log">
-              <ul className="log-list">
-                {storyLog.map((entry, index) => (
-                  <li key={`${entry}-${index}`}>{entry}</li>
-                ))}
-              </ul>
-            </Panel>
+            <article className="scene-card">
+              <h3>Available Actions</h3>
+
+              {currentAreaActions.length > 0 ? (
+                <div className="scene-action-chips">
+                  {currentAreaActions.map((actionLabel) => (
+                    <span key={actionLabel}>{actionLabel}</span>
+                  ))}
+                </div>
+              ) : (
+                <p>No actions available here.</p>
+              )}
+            </article>
+
+            <article className="scene-card">
+              <h3>Area Type</h3>
+              <p>{currentArea?.category || "Unknown"}</p>
+            </article>
           </div>
         </section>
+      </div>
 
-        <aside className="panel stats-panel">
-          <div className="panel-header">
-            <h2>Character & Resources</h2>
-          </div>
+      <div className="log-row">
+        <Panel title="Action Log">
+          <ul className="log-list">
+            {actionLog.map((entry, index) => (
+              <li key={`${entry}-${index}`}>{entry}</li>
+            ))}
+          </ul>
+        </Panel>
 
-          <div className="stats-content">
-            <InfoGroup title="Character">
-              <InfoRow label="Name" value={player.name} />
-              <InfoRow label="Gender" value={player.gender} />
-              <InfoRow label="Level" value={player.level} />
-              <InfoRow label="Path" value={player.path} />
-            </InfoGroup>
+        <Panel title="Story Log">
+          <ul className="log-list">
+            {storyLog.map((entry, index) => (
+              <li key={`${entry}-${index}`}>{entry}</li>
+            ))}
+          </ul>
+        </Panel>
+      </div>
+    </section>
+  );
+}
 
-            <InfoGroup title="Status">
+function CharacterPage({
+  player,
+  resources,
+  gameState,
+  currentAreaLabel,
+  upgrades,
+  activeTab,
+  onChangeTab,
+  onPurchaseUpgrade,
+}) {
+  return (
+    <section className="character-page-panel">
+      <div className="panel-header">
+        <h2>Character Overview</h2>
+      </div>
+
+      <div className="character-page-tabs">
+        <button
+          type="button"
+          className={activeTab === "overview" ? "primary" : ""}
+          onClick={() => onChangeTab("overview")}
+        >
+          Overview
+        </button>
+
+        <button
+          type="button"
+          className={activeTab === "upgrades" ? "primary" : ""}
+          onClick={() => onChangeTab("upgrades")}
+        >
+          Upgrades
+        </button>
+
+        <button
+          type="button"
+          className={activeTab === "items" ? "primary" : ""}
+          onClick={() => onChangeTab("items")}
+        >
+          Items
+        </button>
+      </div>
+
+      <div className="character-page-content">
+        {activeTab === "overview" && (
+          <>
+            <section className="character-card">
+              <h3>Profile</h3>
+
+              <div className="character-grid">
+                <InfoRow label="Name" value={player.name} />
+                <InfoRow label="Gender" value={player.gender} />
+                <InfoRow label="Level" value={player.level} />
+                <InfoRow label="Path" value={player.path} />
+                <InfoRow label="Area" value={currentAreaLabel} />
+                <InfoRow label="Day" value={player.day} />
+              </div>
+            </section>
+
+            <section className="character-card">
+              <h3>Status Details</h3>
+
               <StatMeter
                 label="Health"
                 value={player.hp}
@@ -352,81 +504,171 @@ function App() {
                 max={player.maxStamina}
                 type="stamina"
               />
-            </InfoGroup>
 
-            <InfoGroup title="Resources">
+              <div className="character-grid">
+                <InfoRow
+                  label="HP Regen"
+                  value={formatRegenValue(player.hpRegen)}
+                />
+                <InfoRow
+                  label="Stamina Regen"
+                  value={`${formatRegenValue(player.staminaRegen)}/s`}
+                />
+              </div>
+            </section>
+
+            <section className="character-card">
+              <h3>Resources</h3>
+
               <InfoRow
                 label={resources.gold.label}
                 value={`${resources.gold.amount}g`}
                 highlight
               />
 
-              {discoveredResources.map(([resourceId, resource]) => (
-                <InfoRow
-                  key={resourceId}
-                  label={resource.label}
-                  value={resource.amount}
-                />
-              ))}
+              {Object.entries(resources)
+                .filter(([resourceId, resource]) => {
+                  return resourceId !== "gold" && resource.discovered;
+                })
+                .map(([resourceId, resource]) => (
+                  <InfoRow
+                    key={resourceId}
+                    label={resource.label}
+                    value={resource.amount}
+                  />
+                ))}
 
-              {discoveredResources.length === 0 && (
+              {Object.entries(resources).filter(([resourceId, resource]) => {
+                return resourceId !== "gold" && resource.discovered;
+              }).length === 0 && (
                 <p className="empty-note">No other resources discovered.</p>
               )}
-            </InfoGroup>
+            </section>
+          </>
+        )}
 
-            <InfoGroup title="Upgrades">
-              <div className="upgrade-list">
-                {upgrades.map((upgrade) => {
-                  const level = getUpgradeLevel(gameState, upgrade.id);
-                  const maxed = isUpgradeMaxed(gameState, upgrade);
-                  const cost = getNextUpgradeCost(gameState, upgrade);
+        {activeTab === "upgrades" && (
+          <section className="character-card character-card-wide">
+            <h3>Upgrades</h3>
 
-                  return (
-                    <div key={upgrade.id} className="upgrade-card">
-                      <div className="upgrade-card-header">
-                        <strong>{upgrade.label}</strong>
-                        <span>
-                          Lv. {level}/{upgrade.maxLevel}
-                        </span>
-                      </div>
+            <div className="upgrade-list">
+              {upgrades.map((upgrade) => {
+                const level = getUpgradeLevel(gameState, upgrade.id);
+                const maxed = isUpgradeMaxed(gameState, upgrade);
+                const cost = getNextUpgradeCost(gameState, upgrade);
 
-                      <p>{upgrade.description}</p>
-
-                      <div className="upgrade-card-footer">
-                        <span>
-                          {maxed ? "Maxed" : `Cost: ${formatResourceCost(cost, resources)}`}
-                        </span>
-
-                        <button
-                          type="button"
-                          disabled={maxed}
-                          onClick={() => handlePurchaseUpgrade(upgrade)}
-                        >
-                          {maxed ? "Max" : "Upgrade"}
-                        </button>
-                      </div>
+                return (
+                  <div key={upgrade.id} className="upgrade-card">
+                    <div className="upgrade-card-header">
+                      <strong>{upgrade.label}</strong>
+                      <span>
+                        Lv. {level}/{upgrade.maxLevel}
+                      </span>
                     </div>
-                  );
-                })}
-              </div>
-            </InfoGroup>
-          </div>
-        </aside>
-      </main>
 
-      {activeModal && (
-        <SaveSlotModal
-          mode={activeModal}
-          slots={saveSlots}
-          onClose={closeModal}
-          onSave={handleSaveToSlot}
-          onLoad={handleLoadFromSlot}
-          onDeleteSlot={handleDeleteSlot}
-          onResetCurrentGame={handleResetCurrentGame}
-          onDeleteAllSaves={handleDeleteAllSaves}
-        />
-      )}
-    </div>
+                    <p>{upgrade.description}</p>
+
+                    <div className="upgrade-card-footer">
+                      <span>
+                        {maxed
+                          ? "Maxed"
+                          : `Cost: ${formatResourceCost(cost, resources)}`}
+                      </span>
+
+                      <button
+                        type="button"
+                        disabled={maxed}
+                        onClick={() => onPurchaseUpgrade(upgrade)}
+                      >
+                        {maxed ? "Max" : "Upgrade"}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
+        {activeTab === "items" && (
+          <>
+            <section className="character-card">
+              <h3>Equippable Items</h3>
+              <p className="empty-note">No equippable items discovered yet.</p>
+            </section>
+
+            <section className="character-card">
+              <h3>Inventory</h3>
+              <p className="empty-note">
+                Materials, key items, and equipment will appear here later.
+              </p>
+            </section>
+          </>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function QuickOverviewSidebar({ player, resources, discoveredResources }) {
+  return (
+    <aside className="panel stats-panel">
+      <div className="panel-header">
+        <h2>Character & Resources</h2>
+      </div>
+
+      <div className="stats-content">
+        <InfoGroup title="Character">
+          <InfoRow label="Name" value={player.name} />
+          <InfoRow label="Gender" value={player.gender} />
+          <InfoRow label="Level" value={player.level} />
+          <InfoRow label="Path" value={player.path} />
+        </InfoGroup>
+
+        <InfoGroup title="Status">
+          <StatMeter
+            label="Health"
+            value={player.hp}
+            max={player.maxHp}
+            type="health"
+          />
+
+          <StatMeter
+            label="Mana"
+            value={player.mp}
+            max={player.maxMp}
+            type="mana"
+          />
+
+          <StatMeter
+            label="Stamina"
+            value={player.stamina}
+            max={player.maxStamina}
+            type="stamina"
+          />
+        </InfoGroup>
+
+        <InfoGroup title="Resources">
+          <InfoRow
+            label={resources.gold.label}
+            value={`${resources.gold.amount}g`}
+            highlight
+          />
+
+          {discoveredResources.map(([resourceId, resource]) => (
+            <InfoRow
+              key={resourceId}
+              label={resource.label}
+              value={resource.amount}
+            />
+          ))}
+
+          {discoveredResources.length === 0 && (
+            <p className="empty-note">No other resources discovered.</p>
+          )}
+        </InfoGroup>
+      </div>
+    </aside>
   );
 }
 
@@ -647,6 +889,13 @@ function formatSlotDate(savedAt) {
   if (!savedAt) return "No save date";
 
   return new Date(savedAt).toLocaleString();
+}
+
+function formatRegenValue(value) {
+  const safeValue = Number(value || 0);
+  const rounded = Math.round(safeValue * 10) / 10;
+
+  return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
 }
 
 function Panel({ title, children, className = "" }) {
