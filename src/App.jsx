@@ -31,12 +31,12 @@ function App() {
   const [activeModal, setActiveModal] = useState(null);
   const [saveSlots, setSaveSlots] = useState(() => getSaveSlotSummaries());
 
-  const { player, resources, actionLog, storyLog } = gameState;
+  const { player, resources, actionLog, storyLog, unlocks } = gameState;
 
   const currentArea = getAreaById(areas, player.area);
   const currentAreaLabel = getAreaLabel(areas, player.area);
-  const discoveredAreas = getDiscoveredAreas(areas);
-  const availableActions = getAvailableActions(actions, player.area);
+  const discoveredAreas = getDiscoveredAreas(areas, unlocks);
+  const availableActions = getAvailableActions(actions, player.area, unlocks);
   const discoveredResources = getDiscoveredResources(resources);
   const latestStoryBeat = storyLog[0] || "No major story events yet.";
   const currentAreaActions = availableActions.map((action) => action.label)

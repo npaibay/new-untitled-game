@@ -26,4 +26,12 @@ export const areas = [
     description: "A warm hut filled with herbs, remedies, and gentle care.",
     discovered: true,
   },
+
+  {
+  id: "forest_trail",
+  label: "Forest Trail",
+  description:
+    "A narrow path deeper into the woods. The air feels cooler here, and the village begins to feel distant.",
+  discovered: false,
+  },
 ];

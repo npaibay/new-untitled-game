@@ -43,4 +43,18 @@ export const actions = [
     },
     log: "The healer tends to your wounds.",
   },
+
+  {
+    id: "forage_carefully",
+    label: "Forage Carefully",
+    area: "forest_edge",
+    unlocked: false,
+    cost: {
+      stamina: 2,
+    },
+    rewards: {
+      herbs: 3,
+    },
+    log: "You take your time searching the forest edge and gather a better bundle of herbs."
+  },
 ];

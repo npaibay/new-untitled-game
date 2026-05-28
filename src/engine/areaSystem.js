@@ -1,6 +1,7 @@
 import { storyEvents } from "../data/storyEvents";
 import { processStoryEvents } from "./storySystem";
 import { recordAreaVisit } from "./progressSystem";
+import { processUnlocks } from "./unlockSystem";
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
@@ -27,6 +28,7 @@ export function moveToArea(currentState, area) {
   );
 
   processStoryEvents(nextState, storyEvents);
+  processUnlocks(nextState);
 
   return nextState;
 }

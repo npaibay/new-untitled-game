@@ -4,12 +4,22 @@ export function getDiscoveredResources(resources) {
   );
 }
 
-export function getDiscoveredAreas(areas) {
-  return areas.filter((area) => area.discovered);
+export function getDiscoveredAreas(areas, unlocks) {
+  return areas.filter((area) => {
+    if (area.discovered !== false) return true;
+
+    return Boolean(unlocks?.areas?.[area.id]);
+  });
 }
 
-export function getAvailableActions(actions, currentAreaId) {
-  return actions.filter((action) => action.area === currentAreaId);
+export function getAvailableActions(actions, currentAreaId, unlocks) {
+  return actions.filter((action) => {
+    const isInCurrentArea = action.area === currentAreaId;
+    const isUnlocked =
+      action.unlocked !== false || Boolean(unlocks?.actions?.[action.id]);
+
+    return isInCurrentArea && isUnlocked;
+  });
 }
 
 export function getAreaById(areas, areaId) {

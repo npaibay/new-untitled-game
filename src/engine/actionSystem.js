@@ -11,6 +11,7 @@ import {
 } from "./statSystem";
 import { processStoryEvents } from "./storySystem";
 import { recordActionProgress } from "./progressSystem";
+import { processUnlocks } from "./unlockSystem";
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
@@ -191,6 +192,7 @@ export function performAction(currentState, action) {
   }
 
   processStoryEvents(nextState, storyEvents);
+  processUnlocks(nextState);
 
   return nextState;
 }
