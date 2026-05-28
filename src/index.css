@@ -41,8 +41,16 @@ body {
   font-family: Arial, Helvetica, sans-serif;
   color: var(--text);
   background:
-    radial-gradient(ellipse 80% 40% at 50% 0%, rgba(255, 255, 255, 0.035), transparent),
-    radial-gradient(ellipse 50% 60% at 85% 100%, rgba(255, 255, 255, 0.025), transparent),
+    radial-gradient(
+      ellipse 80% 40% at 50% 0%,
+      rgba(255, 255, 255, 0.035),
+      transparent
+    ),
+    radial-gradient(
+      ellipse 50% 60% at 85% 100%,
+      rgba(255, 255, 255, 0.025),
+      transparent
+    ),
     linear-gradient(180deg, #09090b 0%, #050505 100%);
 }
 
@@ -152,6 +160,10 @@ button.primary {
   gap: 10px;
 }
 
+.character-layout {
+  grid-template-columns: 1fr;
+}
+
 .main-column {
   min-height: 0;
   display: grid;
@@ -204,7 +216,7 @@ button.primary {
 
 .button-list button {
   width: 100%;
-  height: 38px;
+  min-height: 38px;
   text-align: left;
   display: flex;
   justify-content: flex-start;
@@ -344,11 +356,13 @@ button.primary {
   color: var(--text);
 }
 
-/* ─── Character / resources panel ───────────────────────── */
+/* ─── Character / resources side panel ──────────────────── */
+/* Restored to the older flat sidebar style. */
 
 .stats-panel {
+  min-height: 0;
   display: grid;
-  grid-template-rows: auto 1fr;
+  grid-template-rows: auto minmax(0, 1fr);
 }
 
 .stats-content {
@@ -397,6 +411,8 @@ button.primary {
   margin-left: auto;
   color: var(--text);
   font-size: 0.78rem;
+  text-align: right;
+  white-space: nowrap;
 }
 
 .gold-text {
@@ -411,10 +427,6 @@ button.primary {
 }
 
 /* ─── Character page ────────────────────────────────────── */
-
-.character-layout {
-  grid-template-columns: 1fr;
-}
 
 .character-page-panel {
   min-height: 0;
@@ -473,7 +485,7 @@ button.primary {
   gap: 4px;
 }
 
-/* ─── Upgrade Details ───────────────────────────────────── */
+/* ─── Upgrade details ───────────────────────────────────── */
 
 .upgrade-list {
   display: grid;
@@ -717,6 +729,86 @@ button.primary {
   color: var(--text-sub);
   font-size: 0.76rem;
   line-height: 1.5;
+}
+
+/* ─── Force old flat Character & Resources sidebar ─────── */
+
+.stats-panel {
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.stats-panel .stats-content {
+  min-height: 0;
+  overflow-y: auto;
+  display: block;
+  padding: 14px 16px;
+}
+
+.stats-panel .info-group {
+  margin: 14px 0 0;
+  padding: 14px 0 0;
+  border: none;
+  border-top: 1px solid var(--line-soft);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.stats-panel .info-group:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+.stats-panel .info-group h3 {
+  margin: 0 0 10px;
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.stats-panel .info-row {
+  min-height: 32px;
+  padding: 0;
+  border: none;
+  border-bottom: 1px solid var(--line-soft);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.stats-panel .info-row span {
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.7rem;
+}
+
+.stats-panel .info-row strong {
+  margin-left: auto;
+  color: var(--text);
+  font-size: 0.78rem;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.stats-panel .stat-meter {
+  padding: 8px 0 10px;
+  border: none;
+  border-bottom: 1px solid var(--line-soft);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.stats-panel .stat-meter:last-child {
+  border-bottom: none;
 }
 
 /* ─── Responsive ────────────────────────────────────────── */
