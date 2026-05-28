@@ -12,6 +12,26 @@ export function getDiscoveredAreas(areas, unlocks) {
   });
 }
 
+export function getDiscoveredAreaGroups(areas, unlocks) {
+  const discoveredAreas = getDiscoveredAreas(areas, unlocks);
+  const groups = {};
+
+  discoveredAreas.forEach((area) => {
+    const category = area.category || "Other";
+
+    if (!groups[category]) {
+      groups[category] = [];
+    }
+
+    groups[category].push(area);
+  });
+
+  return Object.entries(groups).map(([category, areas]) => ({
+    category,
+    areas,
+  }));
+}
+
 export function getAvailableActions(actions, currentAreaId, unlocks) {
   return actions.filter((action) => {
     const isInCurrentArea = action.area === currentAreaId;

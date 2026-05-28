@@ -11,7 +11,7 @@ import {
   getAvailableActions,
   getAreaById,
   getAreaLabel,
-  getDiscoveredAreas,
+  getDiscoveredAreaGroups,
   getDiscoveredResources,
 } from "./engine/selectors";
 import {
@@ -36,7 +36,7 @@ function App() {
 
   const currentArea = getAreaById(areas, player.area);
   const currentAreaLabel = getAreaLabel(areas, player.area);
-  const discoveredAreas = getDiscoveredAreas(areas, unlocks);
+  const discoveredAreaGroups = getDiscoveredAreaGroups(areas, unlocks);
   const availableActions = getAvailableActions(actions, player.area, unlocks);
   const discoveredResources = getDiscoveredResources(resources);
 
@@ -196,16 +196,24 @@ function App() {
         <section className="main-column">
           <div className="play-row">
             <Panel title="Areas">
-              <div className="button-list">
-                {discoveredAreas.map((area) => (
-                  <button
-                    key={area.id}
-                    type="button"
-                    className={area.id === player.area ? "primary" : ""}
-                    onClick={() => handleMoveToArea(area)}
-                  >
-                    {area.label}
-                  </button>
+              <div className="area-group-list">
+                {discoveredAreaGroups.map((group) => (
+                  <div key={group.category} className="area-group">
+                    <h3>{group.category}</h3>
+
+                    <div className="button-list area-button-list">
+                      {group.areas.map((area) => (
+                        <button
+                          key={area.id}
+                          type="button"
+                          className={area.id === player.area ? "primary" : ""}
+                          onClick={() => handleMoveToArea(area)}
+                        >
+                          {area.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 ))}
               </div>
             </Panel>
@@ -585,7 +593,7 @@ function formatSlotDate(savedAt) {
 
 function Panel({ title, children, className = "" }) {
   return (
-    <section className={'panel ${className}'}>
+    <section className={`panel ${className}`}>
       <div className="panel-header">
         <h2>{title}</h2>
       </div>
