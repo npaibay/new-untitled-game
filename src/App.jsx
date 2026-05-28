@@ -30,6 +30,7 @@ function App() {
 
   const [activeModal, setActiveModal] = useState(null);
   const [saveSlots, setSaveSlots] = useState(() => getSaveSlotSummaries());
+  const [selectedActionId, setSelectedActionId] = useState(null);
 
   const { player, resources, actionLog, storyLog, unlocks } = gameState;
 
@@ -38,8 +39,14 @@ function App() {
   const discoveredAreas = getDiscoveredAreas(areas, unlocks);
   const availableActions = getAvailableActions(actions, player.area, unlocks);
   const discoveredResources = getDiscoveredResources(resources);
+
   const latestStoryBeat = storyLog[0] || "No major story events yet.";
-  const currentAreaActions = availableActions.map((action) => action.label)
+  const currentAreaActions = availableActions.map((action) => action.label);
+
+  const selectedAction =
+    availableActions.find((action) => action.id === selectedActionId) ||
+    availableActions[0] ||
+    null;
 
   useEffect(() => {
     let lastTime = Date.now();
@@ -78,10 +85,12 @@ function App() {
   }
 
   function handleMoveToArea(area) {
+    setSelectedActionId(null);
     setGameState((currentState) => moveToArea(currentState, area));
   }
 
   function handleAction(action) {
+    setSelectedActionId(action.id);
     setGameState((currentState) => performAction(currentState, action));
   }
 
@@ -105,6 +114,7 @@ function App() {
       return;
     }
 
+    setSelectedActionId(null);
     setGameState(addSystemLog(savedState, `Loaded Slot ${slotId}.`));
     refreshSaveSlots();
     closeModal();
@@ -122,6 +132,7 @@ function App() {
   function handleResetCurrentGame() {
     const resetState = createGameState();
 
+    setSelectedActionId(null);
     setGameState(addSystemLog(resetState, "Current game reset."));
     closeModal();
   }
@@ -131,6 +142,7 @@ function App() {
 
     const resetState = createGameState();
 
+    setSelectedActionId(null);
     setGameState(addSystemLog(resetState, "All save slots deleted."));
     refreshSaveSlots();
     closeModal();
@@ -139,16 +151,26 @@ function App() {
   return (
     <div className="app">
       <header className="topbar">
-        <nav className="nav-tabs">
-          <button className="nav-btn active">Main</button>
-          <button className="nav-btn">Story</button>
-          <button className="nav-btn">Relationships</button>
-          <button className="nav-btn">Party</button>
-          <button className="nav-btn">Codex</button>
+        <nav className="nav-tabs" aria-label="Main navigation">
+          <button className="nav-btn active" type="button">
+            Main
+          </button>
+          <button className="nav-btn" type="button">
+            Story
+          </button>
+          <button className="nav-btn" type="button">
+            Relationships
+          </button>
+          <button className="nav-btn" type="button">
+            Party
+          </button>
+          <button className="nav-btn" type="button">
+            Codex
+          </button>
         </nav>
 
         <div className="topbar-right">
-          <div className="status-strip">
+          <div className="status-strip" aria-label="Current status">
             <span>Area: {currentAreaLabel}</span>
             <span>{player.day}</span>
             <span>Path: {player.path}</span>
@@ -188,28 +210,34 @@ function App() {
               </div>
             </Panel>
 
-            <Panel title="Actions">
-              <div className="button-list">
-                {availableActions.map((action) => {
-                  const isRestingAction =
-                    action.startsResting && player.isResting;
+            <Panel title="Actions" className="actions-panel">
+              <div className="action-panel-body">
+                <div className="button-list action-list-scroll">
+                  {availableActions.map((action) => {
+                    const isRestingAction = action.startsResting && player.isResting;
+                    const isSelected = selectedAction?.id === action.id;
 
-                  return (
-                    <button
-                      key={action.id}
-                      type="button"
-                      className={isRestingAction ? "primary" : ""}
-                      disabled={isRestingAction}
-                      onClick={() => handleAction(action)}
-                    >
-                      {isRestingAction ? "Resting..." : action.label}
-                    </button>
-                  );
-                })}
+                    return (
+                      <button
+                        key={action.id}
+                        type="button"
+                        className={isRestingAction || isSelected ? "primary" : ""}
+                        disabled={isRestingAction}
+                        onMouseEnter={() => setSelectedActionId(action.id)}
+                        onFocus={() => setSelectedActionId(action.id)}
+                        onClick={() => handleAction(action)}
+                      >
+                        {isRestingAction ? "Resting..." : action.label}
+                      </button>
+                    );
+                  })}
 
-                {availableActions.length === 0 && (
-                  <p className="empty-note">No actions available here.</p>
-                )}
+                  {availableActions.length === 0 && (
+                    <p className="empty-note">No actions available here.</p>
+                  )}
+                </div>
+
+                <ActionDetails action={selectedAction} resources={resources} />
               </div>
             </Panel>
 
@@ -231,9 +259,9 @@ function App() {
 
                 <article className="scene-card">
                   <h3>Available Actions</h3>
-                  
+
                   {currentAreaActions.length > 0 ? (
-                    <p>{currentAreaActions.join(" . ")}</p>
+                    <p>{currentAreaActions.join(" · ")}</p>
                   ) : (
                     <p>No actions available here.</p>
                   )}
@@ -354,7 +382,12 @@ function SaveSlotModal({
 
   return (
     <div className="modal-backdrop">
-      <section className="modal-panel">
+      <section
+        className="modal-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+      >
         <div className="modal-header">
           <h2>{title}</h2>
           <button type="button" onClick={onClose}>
@@ -444,15 +477,115 @@ function SaveSlotCard({ mode, slot, onSave, onLoad, onDeleteSlot }) {
   );
 }
 
+function ActionDetails({ action, resources }) {
+  if (!action) {
+    return (
+      <div className="action-details">
+        <h3>Action Details</h3>
+        <p>No action selected.</p>
+      </div>
+    );
+  }
+
+  const { statCost, resourceCost } = getActionCostDetails(action);
+  const rewards = action.rewards || {};
+  const restore = action.restore || {};
+
+  const hasStatCost = Object.keys(statCost).length > 0;
+  const hasResourceCost = Object.keys(resourceCost).length > 0;
+  const hasRewards = Object.keys(rewards).length > 0;
+  const hasRestore = Object.keys(restore).length > 0;
+
+  return (
+    <div className="action-details">
+      <h3>{action.label}</h3>
+
+      {action.log && <p>{action.log}</p>}
+
+      {action.startsResting && (
+        <p>Effect: Recover health and stamina over time.</p>
+      )}
+
+      {hasStatCost && (
+        <p>
+          Cost:{" "}
+          {Object.entries(statCost)
+            .map(([stat, amount]) => `${amount} ${formatStatLabel(stat)}`)
+            .join(", ")}
+        </p>
+      )}
+
+      {hasResourceCost && (
+        <p>
+          Requires:{" "}
+          {Object.entries(resourceCost)
+            .map(([resourceId, amount]) => {
+              const label = resources[resourceId]?.label || resourceId;
+              return `${amount} ${label}`;
+            })
+            .join(", ")}
+        </p>
+      )}
+
+      {hasRewards && (
+        <p>
+          Rewards:{" "}
+          {Object.entries(rewards)
+            .map(([resourceId, amount]) => {
+              const label = resources[resourceId]?.label || resourceId;
+              return `+${amount} ${label}`;
+            })
+            .join(", ")}
+        </p>
+      )}
+
+      {hasRestore && (
+        <p>
+          Restores:{" "}
+          {Object.entries(restore)
+            .map(([stat, amount]) => `+${amount} ${formatStatLabel(stat)}`)
+            .join(", ")}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function getActionCostDetails(action) {
+  const cost = action.cost || {};
+
+  if (cost.stats || cost.resources) {
+    return {
+      statCost: cost.stats || {},
+      resourceCost: cost.resources || {},
+    };
+  }
+
+  return {
+    statCost: cost,
+    resourceCost: {},
+  };
+}
+
+function formatStatLabel(stat) {
+  const labels = {
+    hp: "Health",
+    mp: "Mana",
+    stamina: "Stamina",
+  };
+
+  return labels[stat] || stat;
+}
+
 function formatSlotDate(savedAt) {
   if (!savedAt) return "No save date";
 
   return new Date(savedAt).toLocaleString();
 }
 
-function Panel({ title, children }) {
+function Panel({ title, children, className = "" }) {
   return (
-    <section className="panel">
+    <section className={'panel ${className}'}>
       <div className="panel-header">
         <h2>{title}</h2>
       </div>
