@@ -270,10 +270,10 @@ button.primary {
   max-width: 760px;
 }
 
-.scene-detail-grid {
+.scene-dashboard {
   min-height: 0;
   display: grid;
-  grid-template-columns: 1.4fr 1fr;
+  grid-template-columns: 1fr 220px;
   gap: 10px;
   align-content: start;
 }
@@ -300,7 +300,25 @@ button.primary {
 }
 
 .scene-card-large {
-  min-height: 110px;
+  grid-column: 1 / -1;
+  min-height: 120px;
+}
+
+.scene-action-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.scene-action-chips span {
+  border: 1px solid var(--line-soft);
+  border-radius: 999px;
+  padding: 5px 10px;
+  color: var(--text-sub);
+  background: rgba(255, 255, 255, 0.02);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 /* ─── Logs ──────────────────────────────────────────────── */
@@ -609,7 +627,7 @@ button.primary {
   .game-layout,
   .play-row,
   .log-row,
-  .scene-detail-grid {
+  .scene-dashboard {
     grid-template-columns: 1fr;
   }
 

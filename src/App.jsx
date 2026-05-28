@@ -259,7 +259,7 @@ function App() {
                 </p>
               </div>
 
-              <div className="scene-detail-grid">
+              <div className="scene-dashboard">
                 <article className="scene-card scene-card-large">
                   <h3>Latest Story Beat</h3>
                   <p>{latestStoryBeat}</p>
@@ -269,10 +269,19 @@ function App() {
                   <h3>Available Actions</h3>
 
                   {currentAreaActions.length > 0 ? (
-                    <p>{currentAreaActions.join(" · ")}</p>
+                    <div className="scene-action-chips">
+                      {currentAreaActions.map((actionLabel) => (
+                        <span key={actionLabel}>{actionLabel}</span>
+                      ))}
+                    </div>
                   ) : (
                     <p>No actions available here.</p>
                   )}
+                </article>
+
+                <article className="scene-card">
+                  <h3>Area Type</h3>
+                  <p>{currentArea?.category || "Unknown"}</p>
                 </article>
               </div>
             </section>
