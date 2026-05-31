@@ -5,19 +5,13 @@ export const items = [
     type: "equipment",
     slot: "weapon",
     rarity: "common",
-    category: "Starter Gear",
+    category: "Training Gear",
     description:
       "A simple wooden stick. It is not much of a weapon, but it is familiar and easy to hold.",
-  },
-  {
-    id: "worn_cloak",
-    label: "Worn Cloak",
-    type: "equipment",
-    slot: "body",
-    rarity: "common",
-    category: "Starter Gear",
-    description:
-      "A plain cloak from home. It carries the comfort of ordinary days.",
+    progression: {
+      unlocks: ["combat_basics"],
+      flags: ["has_training_stick"],
+    },
   },
   {
     id: "threadbare_charm",
@@ -28,13 +22,40 @@ export const items = [
     category: "Starter Gear",
     description:
       "A small charm tied with old thread. It does not seem powerful, but it feels important.",
+    progression: {
+      flags: ["has_threadbare_charm"],
+    },
+  },
+  {
+    id: "worn_cloak",
+    label: "Worn Cloak",
+    type: "key_item",
+    rarity: "common",
+    category: "Keepsake",
+    description:
+      "A plain cloak from home. It carries the comfort of ordinary days.",
+    progression: {
+      flags: ["has_home_keepsake"],
+    },
+  },
+  {
+    id: "suspicious_pebble",
+    label: "Suspicious Pebble",
+    type: "key_item",
+    rarity: "common",
+    category: "???",
+    description:
+      "It looks important. It is probably not. Probably.",
+    progression: {
+      flags: ["has_suspicious_pebble"],
+    },
   },
 ];
 
 export const starterInventory = {
   items: [
     {
-      itemId: "training_stick",
+      itemId: "threadbare_charm",
       quantity: 1,
     },
     {
@@ -42,14 +63,15 @@ export const starterInventory = {
       quantity: 1,
     },
     {
-      itemId: "threadbare_charm",
+      itemId: "suspicious_pebble",
       quantity: 1,
     },
   ],
 };
 
 export const starterEquipment = {
-  weapon: "training_stick",
-  body: "worn_cloak",
-  accessory: "threadbare_charm",
+  weapon: null,
+  accessory1: "threadbare_charm",
+  accessory2: null,
+  accessory3: null,
 };

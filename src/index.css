@@ -888,6 +888,27 @@ button.primary {
   text-transform: uppercase;
 }
 
+/* ─── Inventory sections ────────────────────────────────── */
+
+.inventory-section {
+  display: grid;
+  gap: 8px;
+}
+
+.inventory-section + .inventory-section {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line-soft);
+}
+
+.inventory-section h4 {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.66rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
 @media (max-width: 1100px) {
   .equipment-grid {
     grid-template-columns: 1fr;

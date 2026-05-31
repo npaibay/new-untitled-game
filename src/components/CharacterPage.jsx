@@ -15,12 +15,16 @@ const equipmentSlots = [
     label: "Weapon",
   },
   {
-    id: "body",
-    label: "Body",
+    id: "accessory1",
+    label: "Accessory 1",
   },
   {
-    id: "accessory",
-    label: "Accessory",
+    id: "accessory2",
+    label: "Accessory 2",
+  },
+  {
+    id: "accessory3",
+    label: "Accessory 3",
   },
 ];
 
@@ -44,6 +48,30 @@ function CharacterPage({
 
   const inventoryItems = gameState.inventory?.items || [];
   const equipment = gameState.equipment || {};
+
+  const resolvedInventoryItems = inventoryItems.map((entry) => {
+    const itemId = entry.itemId || entry.id;
+    const item = itemMap.get(itemId);
+
+    return {
+      entry,
+      itemId,
+      item,
+      quantity: entry.quantity ?? 1,
+    };
+  });
+
+  const equipmentInventoryItems = resolvedInventoryItems.filter(({ item }) => {
+    return item?.type === "equipment";
+  });
+
+  const keyItems = resolvedInventoryItems.filter(({ item }) => {
+    return item?.type === "key_item";
+  });
+
+  const unknownItems = resolvedInventoryItems.filter(({ item }) => {
+    return !item;
+  });
 
   return (
     <section className="character-page-panel">
@@ -232,44 +260,18 @@ function CharacterPage({
             <section className="character-card character-card-wide">
               <h3>Inventory</h3>
 
-              {inventoryItems.length > 0 ? (
-                <div className="inventory-list">
-                  {inventoryItems.map((entry) => {
-                    const itemId = entry.itemId || entry.id;
-                    const item = itemMap.get(itemId);
-                    const quantity = entry.quantity ?? 1;
+              <InventorySection
+                title="Equipment Items"
+                items={equipmentInventoryItems}
+              />
 
-                    if (!item) {
-                      return (
-                        <div key={itemId} className="inventory-item">
-                          <div>
-                            <strong>{itemId}</strong>
-                            <p>Unknown item.</p>
-                          </div>
+              <InventorySection title="Key Items" items={keyItems} />
 
-                          <span className="item-type-pill">x{quantity}</span>
-                        </div>
-                      );
-                    }
+              {unknownItems.length > 0 && (
+                <InventorySection title="Unknown Items" items={unknownItems} />
+              )}
 
-                    return (
-                      <div key={item.id} className="inventory-item">
-                        <div>
-                          <strong>{item.label}</strong>
-                          <p>{item.description}</p>
-                        </div>
-
-                        <div className="inventory-item-meta">
-                          <span className="item-type-pill">
-                            {formatItemType(item)}
-                          </span>
-                          <span className="item-type-pill">x{quantity}</span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
+              {resolvedInventoryItems.length === 0 && (
                 <p className="empty-note">No items discovered yet.</p>
               )}
             </section>
@@ -280,9 +282,64 @@ function CharacterPage({
   );
 }
 
+function InventorySection({ title, items }) {
+  if (items.length === 0) {
+    return (
+      <div className="inventory-section">
+        <h4>{title}</h4>
+        <p className="empty-note">Nothing here yet.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="inventory-section">
+      <h4>{title}</h4>
+
+      <div className="inventory-list">
+        {items.map(({ itemId, item, quantity }) => {
+          if (!item) {
+            return (
+              <div key={itemId} className="inventory-item">
+                <div>
+                  <strong>{itemId}</strong>
+                  <p>Unknown item.</p>
+                </div>
+
+                <span className="item-type-pill">x{quantity}</span>
+              </div>
+            );
+          }
+
+          return (
+            <div key={item.id} className="inventory-item">
+              <div>
+                <strong>{item.label}</strong>
+                <p>{item.description}</p>
+              </div>
+
+              <div className="inventory-item-meta">
+                <span className="item-type-pill">
+                  {formatItemType(item)}
+                </span>
+                <span className="item-type-pill">{item.category}</span>
+                <span className="item-type-pill">x{quantity}</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function formatItemType(item) {
   if (item.type === "equipment" && item.slot) {
     return item.slot;
+  }
+
+  if (item.type === "key_item") {
+    return "key item";
   }
 
   return item.type || "item";
