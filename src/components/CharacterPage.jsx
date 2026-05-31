@@ -48,6 +48,11 @@ function CharacterPage({
 
   const inventoryItems = gameState.inventory?.items || [];
   const equipment = gameState.equipment || {};
+  const combatTraining = gameState.progress?.combatTraining ?? 0;
+  const combatBasicsUnlocked = Boolean(
+    gameState.unlocks?.systems?.combat_basics
+  );
+  const basicGuardUnlocked = Boolean(gameState.unlocks?.systems?.basic_guard);
 
   const resolvedInventoryItems = inventoryItems.map((entry) => {
     const itemId = entry.itemId || entry.id;
@@ -153,6 +158,31 @@ function CharacterPage({
                 <InfoRow
                   label="Stamina Regen"
                   value={`${formatRegenValue(player.staminaRegen)}/s`}
+                />
+              </div>
+            </section>
+
+            <section className="character-card">
+              <h3>Combat Foundation</h3>
+
+              <div className="character-grid">
+                <InfoRow
+                  label="Combat Basics"
+                  value={combatBasicsUnlocked ? "Unlocked" : "Locked"}
+                />
+                <InfoRow
+                  label="Combat Training"
+                  value={combatTraining}
+                  highlight={combatTraining > 0}
+                />
+                <InfoRow
+                  label="Training Rank"
+                  value={getCombatTrainingRank(combatTraining)}
+                />
+                <InfoRow
+                  label="Basic Guard"
+                  value={basicGuardUnlocked ? "Learned" : "Not learned"}
+                  highlight={basicGuardUnlocked}
                 />
               </div>
             </section>
@@ -343,6 +373,18 @@ function formatItemType(item) {
   }
 
   return item.type || "item";
+}
+
+function getCombatTrainingRank(combatTraining) {
+  if (combatTraining >= 5) {
+    return "Guard Basics";
+  }
+
+  if (combatTraining > 0) {
+    return "Beginner";
+  }
+
+  return "Untrained";
 }
 
 export default CharacterPage;

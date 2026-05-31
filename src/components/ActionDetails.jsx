@@ -15,18 +15,24 @@ function ActionDetails({ action, resources }) {
   const rewards = action.rewards || {};
   const restore = action.restore || {};
   const itemRewards = action.itemRewards || [];
+  const progressRewards = action.progressRewards || {};
+  const progressMilestones = action.progressMilestones || [];
 
   const hasStatCost = Object.keys(statCost).length > 0;
   const hasResourceCost = Object.keys(resourceCost).length > 0;
   const hasRewards = Object.keys(rewards).length > 0;
   const hasRestore = Object.keys(restore).length > 0;
   const hasItemRewards = itemRewards.length > 0;
+  const hasProgressRewards = Object.keys(progressRewards).length > 0;
+  const hasProgressMilestones = progressMilestones.length > 0;
 
   return (
     <div className="action-details">
       <h3>{action.label}</h3>
 
-      {action.log && <p>{action.log}</p>}
+      {(action.description || action.log) && (
+        <p>{action.description || action.log}</p>
+      )}
 
       {action.startsResting && (
         <p>Effect: Recover health and stamina over time.</p>
@@ -81,6 +87,31 @@ function ActionDetails({ action, resources }) {
         </p>
       )}
 
+      {hasProgressRewards && (
+        <p>
+          Progress:{" "}
+          {Object.entries(progressRewards)
+            .map(([progressKey, amount]) => {
+              const sign = amount >= 0 ? "+" : "";
+              return `${sign}${amount} ${formatProgressLabel(progressKey)}`;
+            })
+            .join(", ")}
+        </p>
+      )}
+
+      {hasProgressMilestones && (
+        <p>
+          Milestone:{" "}
+          {progressMilestones
+            .map((milestone) => {
+              return `${formatProgressLabel(milestone.progressKey)} ${
+                milestone.threshold
+              }`;
+            })
+            .join(", ")}
+        </p>
+      )}
+
       {hasRestore && (
         <p>
           Restores:{" "}
@@ -107,6 +138,23 @@ function getActionCostDetails(action) {
     statCost: cost,
     resourceCost: {},
   };
+}
+
+function formatProgressLabel(progressKey) {
+  const progressLabels = {
+    combatTraining: "Combat Training",
+  };
+
+  if (progressLabels[progressKey]) {
+    return progressLabels[progressKey];
+  }
+
+  return progressKey
+    .split("_")
+    .map((word) => {
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    })
+    .join(" ");
 }
 
 export default ActionDetails;

@@ -1,6 +1,6 @@
 import { createGameState } from "./createGameState";
 
-export const CURRENT_SAVE_VERSION = 5;
+export const CURRENT_SAVE_VERSION = 6;
 
 function isPlainObject(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value);

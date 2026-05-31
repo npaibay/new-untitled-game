@@ -30,10 +30,20 @@ function addLog(logList, entry) {
   return [entry, ...logList].slice(0, 50);
 }
 
+function addLogsInDisplayOrder(logList, entries) {
+  return [...entries, ...logList].slice(0, 50);
+}
+
 function getActionLog(action, message) {
+  const trimmedMessage = typeof message === "string" ? message.trim() : "";
+
+  if (!trimmedMessage) {
+    return createLogEntry("action", `Action used: ${action.label}`);
+  }
+
   return createLogEntry(
     "action",
-    `Action used: ${action.label}\n${message}`
+    `Action used: ${action.label}\n\n${trimmedMessage}`
   );
 }
 
@@ -102,10 +112,22 @@ function formatUnlockLabel(unlockId) {
     .join(" ");
 }
 
+function formatProgressLabel(progressKey) {
+  const progressLabels = {
+    combatTraining: "Combat Training",
+  };
+
+  return progressLabels[progressKey] || formatUnlockLabel(progressKey);
+}
+
 function getActionLabel(actionId) {
   const action = actions.find((entry) => entry.id === actionId);
 
   return action?.label || formatUnlockLabel(actionId);
+}
+
+function getActionUseCount(state, actionId) {
+  return state.progress?.actionCounts?.[actionId] || 0;
 }
 
 function getMissingStatCosts(player, statCost = {}) {
@@ -131,6 +153,28 @@ function getMissingStatMessage(missingStats) {
   return `Not enough ${otherStats} and ${lastStat}.`;
 }
 
+function ensureProgressGroup(state) {
+  if (!state.progress) {
+    state.progress = {};
+  }
+
+  if (typeof state.progress.totalActions !== "number") {
+    state.progress.totalActions = 0;
+  }
+
+  if (typeof state.progress.combatTraining !== "number") {
+    state.progress.combatTraining = 0;
+  }
+
+  if (!state.progress.actionCounts) {
+    state.progress.actionCounts = {};
+  }
+
+  if (!state.progress.areaVisits) {
+    state.progress.areaVisits = {};
+  }
+}
+
 function ensureUnlockGroups(state) {
   if (!state.unlocks) {
     state.unlocks = {};
@@ -151,6 +195,28 @@ function ensureUnlockGroups(state) {
   if (!state.unlocks.completedActions) {
     state.unlocks.completedActions = {};
   }
+
+  if (!Array.isArray(state.unlocks.completedRules)) {
+    state.unlocks.completedRules = [];
+  }
+}
+
+function addStoryLog(state, storyEntry) {
+  if (!storyEntry) {
+    return;
+  }
+
+  state.storyLog = addLog(state.storyLog || [], storyEntry);
+}
+
+function applyActionStoryEntries(state, action) {
+  if (action.story) {
+    addStoryLog(state, action.story);
+  }
+
+  if (action.storyOnFirstUse && getActionUseCount(state, action.id) === 0) {
+    addStoryLog(state, action.storyOnFirstUse);
+  }
 }
 
 function markOneTimeActionCompleted(state, action) {
@@ -165,9 +231,8 @@ function markOneTimeActionCompleted(state, action) {
   state.unlocks.completedActions[completionId] = true;
 }
 
-function applyActionCompletionUnlocks(state, action) {
+function applyUnlocks(state, unlocks = {}) {
   const messages = [];
-  const unlocks = action.unlocksOnComplete || {};
 
   ensureUnlockGroups(state);
 
@@ -210,8 +275,94 @@ function applyActionCompletionUnlocks(state, action) {
   return messages;
 }
 
+function applyActionCompletionUnlocks(state, action) {
+  return applyUnlocks(state, action.unlocksOnComplete || {});
+}
+
+function applyProgressRewards(state, action) {
+  const messages = [];
+  const progressRewards = action.progressRewards || {};
+
+  ensureProgressGroup(state);
+
+  Object.entries(progressRewards).forEach(([progressKey, amount]) => {
+    if (typeof amount !== "number" || Number.isNaN(amount)) {
+      return;
+    }
+
+    const currentValue =
+      typeof state.progress[progressKey] === "number"
+        ? state.progress[progressKey]
+        : 0;
+
+    state.progress[progressKey] = Math.max(0, currentValue + amount);
+
+    const sign = amount >= 0 ? "+" : "";
+
+    messages.push(
+      createLogEntry(
+        "progress",
+        `${sign}${amount} ${formatProgressLabel(progressKey)}`
+      )
+    );
+  });
+
+  return messages;
+}
+
+function applyProgressMilestones(state, action) {
+  const messages = [];
+  const milestones = action.progressMilestones || [];
+
+  ensureProgressGroup(state);
+  ensureUnlockGroups(state);
+
+  milestones.forEach((milestone) => {
+    const progressKey = milestone.progressKey;
+    const threshold = milestone.threshold;
+
+    if (!progressKey || typeof threshold !== "number") {
+      return;
+    }
+
+    const milestoneId =
+      milestone.id || `${action.id}_${progressKey}_${threshold}`;
+    const completionId = `progress_milestone_${milestoneId}`;
+    const currentValue =
+      typeof state.progress[progressKey] === "number"
+        ? state.progress[progressKey]
+        : 0;
+
+    if (state.unlocks.completedRules.includes(completionId)) {
+      return;
+    }
+
+    if (currentValue < threshold) {
+      return;
+    }
+
+    state.unlocks.completedRules.push(completionId);
+
+    if (milestone.log) {
+      messages.push(createLogEntry("unlock", milestone.log));
+    }
+
+    if (milestone.story) {
+      addStoryLog(state, milestone.story);
+    }
+
+    const unlockMessages = applyUnlocks(state, milestone.unlocks || {});
+    messages.push(...unlockMessages);
+  });
+
+  return messages;
+}
+
 export function performAction(currentState, action) {
   const nextState = clone(currentState);
+
+  ensureProgressGroup(nextState);
+  ensureUnlockGroups(nextState);
 
   if (action.startsResting) {
     if (nextState.player.isResting) {
@@ -282,30 +433,30 @@ export function performAction(currentState, action) {
   addResources(nextState.resources, action.rewards);
 
   const itemRewardMessages = grantItemRewards(nextState, action.itemRewards);
+  const progressRewardMessages = applyProgressRewards(nextState, action);
   const completionUnlockMessages = applyActionCompletionUnlocks(
     nextState,
     action
   );
+  const progressMilestoneMessages = applyProgressMilestones(nextState, action);
+
+  applyActionStoryEntries(nextState, action);
 
   recordActionProgress(nextState.progress, action);
   markOneTimeActionCompleted(nextState, action);
 
-  nextState.actionLog = addLog(
+  const actionLogEntries = [
+    getActionLog(action, action.log),
+    ...itemRewardMessages,
+    ...progressRewardMessages,
+    ...completionUnlockMessages,
+    ...progressMilestoneMessages,
+  ];
+
+  nextState.actionLog = addLogsInDisplayOrder(
     nextState.actionLog,
-    getActionLog(action, action.log || "Action completed.")
+    actionLogEntries
   );
-
-  itemRewardMessages.forEach((message) => {
-    nextState.actionLog = addLog(nextState.actionLog, message);
-  });
-
-  completionUnlockMessages.forEach((message) => {
-    nextState.actionLog = addLog(nextState.actionLog, message);
-  });
-
-  if (action.story) {
-    nextState.storyLog = addLog(nextState.storyLog, action.story);
-  }
 
   processStoryEvents(nextState, storyEvents);
   processUnlocks(nextState);

@@ -944,6 +944,10 @@ button.primary {
   color: #f59e0b;
 }
 
+.log-entry-progress {
+  color: #38bdf8;
+}
+
 .log-list li:first-child.log-entry-item_gain {
   color: #22c55e;
 }
@@ -958,6 +962,10 @@ button.primary {
 
 .log-list li:first-child.log-entry-warning {
   color: #f59e0b;
+}
+
+.log-list li:first-child.log-entry-progress {
+  color: #38bdf8;
 }
 
 /* ─── Strong typed log color overrides ──────────────────── */
@@ -983,6 +991,11 @@ button.primary {
 
 .log-list li.log-entry-warning {
   color: #f59e0b !important;
+  font-weight: 700;
+}
+
+.log-list li.log-entry-progress {
+  color: #38bdf8 !important;
   font-weight: 700;
 }
 

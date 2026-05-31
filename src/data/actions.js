@@ -48,11 +48,28 @@ export const actions = [
     label: "Practice with Garron",
     area: "stonefield_house",
     unlocked: false,
+    description:
+      "Practice the basic forms Garron taught you with the training stick.",
+    storyOnFirstUse:
+      "You practice the basic forms Garron taught you, slowly getting used to the weight of the training stick.",
     cost: {
       stamina: 1,
     },
-    log:
-      "You practice the basic forms Garron taught you, slowly getting used to the weight of the training stick.",
+    progressRewards: {
+      combatTraining: 1,
+    },
+    progressMilestones: [
+      {
+        id: "basic_guard",
+        progressKey: "combatTraining",
+        threshold: 5,
+        unlocks: {
+          systems: ["basic_guard"],
+        },
+        story:
+          "Garron notices your stance becoming steadier. You have learned the basics of guarding.",
+      },
+    ],
   },
 
   {

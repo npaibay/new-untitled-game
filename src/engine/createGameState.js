@@ -38,6 +38,7 @@ export function createGameState() {
 
     progress: {
       totalActions: 0,
+      combatTraining: 0,
       actionCounts: {},
       areaVisits: {
         [defaultPlayer.area]: 1,
