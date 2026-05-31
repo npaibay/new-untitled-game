@@ -1,4 +1,5 @@
 import { storyEvents } from "../data/storyEvents";
+import { actions } from "../data/actions";
 import {
   addResources,
   canPayResourceCost,
@@ -92,6 +93,21 @@ function formatStatName(stat) {
   return statNames[stat] || stat;
 }
 
+function formatUnlockLabel(unlockId) {
+  return unlockId
+    .split("_")
+    .map((word) => {
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    })
+    .join(" ");
+}
+
+function getActionLabel(actionId) {
+  const action = actions.find((entry) => entry.id === actionId);
+
+  return action?.label || formatUnlockLabel(actionId);
+}
+
 function getMissingStatCosts(player, statCost = {}) {
   return Object.entries(statCost)
     .filter(([stat, amount]) => {
@@ -115,22 +131,83 @@ function getMissingStatMessage(missingStats) {
   return `Not enough ${otherStats} and ${lastStat}.`;
 }
 
-function markOneTimeActionCompleted(state, action) {
-  if (!action.oneTime) {
-    return;
-  }
-
+function ensureUnlockGroups(state) {
   if (!state.unlocks) {
     state.unlocks = {};
+  }
+
+  if (!state.unlocks.areas) {
+    state.unlocks.areas = {};
+  }
+
+  if (!state.unlocks.actions) {
+    state.unlocks.actions = {};
+  }
+
+  if (!state.unlocks.systems) {
+    state.unlocks.systems = {};
   }
 
   if (!state.unlocks.completedActions) {
     state.unlocks.completedActions = {};
   }
+}
+
+function markOneTimeActionCompleted(state, action) {
+  if (!action.oneTime) {
+    return;
+  }
+
+  ensureUnlockGroups(state);
 
   const completionId = action.completionId || action.id;
 
   state.unlocks.completedActions[completionId] = true;
+}
+
+function applyActionCompletionUnlocks(state, action) {
+  const messages = [];
+  const unlocks = action.unlocksOnComplete || {};
+
+  ensureUnlockGroups(state);
+
+  if (Array.isArray(unlocks.actions)) {
+    unlocks.actions.forEach((actionId) => {
+      if (!state.unlocks.actions[actionId]) {
+        state.unlocks.actions[actionId] = true;
+
+        messages.push(
+          createLogEntry("unlock", `Unlocked action: ${getActionLabel(actionId)}`)
+        );
+      }
+    });
+  }
+
+  if (Array.isArray(unlocks.areas)) {
+    unlocks.areas.forEach((areaId) => {
+      if (!state.unlocks.areas[areaId]) {
+        state.unlocks.areas[areaId] = true;
+
+        messages.push(
+          createLogEntry("unlock", `Unlocked area: ${formatUnlockLabel(areaId)}`)
+        );
+      }
+    });
+  }
+
+  if (Array.isArray(unlocks.systems)) {
+    unlocks.systems.forEach((systemId) => {
+      if (!state.unlocks.systems[systemId]) {
+        state.unlocks.systems[systemId] = true;
+
+        messages.push(
+          createLogEntry("unlock", `Unlocked: ${formatUnlockLabel(systemId)}`)
+        );
+      }
+    });
+  }
+
+  return messages;
 }
 
 export function performAction(currentState, action) {
@@ -205,6 +282,10 @@ export function performAction(currentState, action) {
   addResources(nextState.resources, action.rewards);
 
   const itemRewardMessages = grantItemRewards(nextState, action.itemRewards);
+  const completionUnlockMessages = applyActionCompletionUnlocks(
+    nextState,
+    action
+  );
 
   recordActionProgress(nextState.progress, action);
   markOneTimeActionCompleted(nextState, action);
@@ -215,6 +296,10 @@ export function performAction(currentState, action) {
   );
 
   itemRewardMessages.forEach((message) => {
+    nextState.actionLog = addLog(nextState.actionLog, message);
+  });
+
+  completionUnlockMessages.forEach((message) => {
     nextState.actionLog = addLog(nextState.actionLog, message);
   });
 

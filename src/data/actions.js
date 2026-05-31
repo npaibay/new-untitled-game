@@ -35,9 +35,24 @@ export const actions = [
         quantity: 1,
       },
     ],
+    unlocksOnComplete: {
+      actions: ["practice_with_garron"],
+    },
     log: "You train with Garron.",
     story:
       "Garron walks you through the basics, then hands you a simple training stick.",
+  },
+
+  {
+    id: "practice_with_garron",
+    label: "Practice with Garron",
+    area: "stonefield_house",
+    unlocked: false,
+    cost: {
+      stamina: 1,
+    },
+    log:
+      "You practice the basic forms Garron taught you, slowly getting used to the weight of the training stick.",
   },
 
   {
