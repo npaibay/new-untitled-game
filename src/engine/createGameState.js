@@ -48,6 +48,7 @@ export function createGameState() {
       areas: createInitialUnlockMap(areas, "discovered"),
       actions: createInitialUnlockMap(actions, "unlocked"),
       systems: {},
+      completedActions: {},
       completedRules: [],
     },
   };

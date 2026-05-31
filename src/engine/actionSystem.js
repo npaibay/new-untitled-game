@@ -105,6 +105,24 @@ function getMissingStatMessage(missingStats) {
   return `Not enough ${otherStats} and ${lastStat}.`;
 }
 
+function markOneTimeActionCompleted(state, action) {
+  if (!action.oneTime) {
+    return;
+  }
+
+  if (!state.unlocks) {
+    state.unlocks = {};
+  }
+
+  if (!state.unlocks.completedActions) {
+    state.unlocks.completedActions = {};
+  }
+
+  const completionId = action.completionId || action.id;
+
+  state.unlocks.completedActions[completionId] = true;
+}
+
 export function performAction(currentState, action) {
   const nextState = clone(currentState);
 
@@ -181,12 +199,10 @@ export function performAction(currentState, action) {
   restoreStats(nextState.player, action.restore);
   addResources(nextState.resources, action.rewards);
 
-  const itemRewardMessages = grantItemRewards(
-    nextState,
-    action.itemRewards
-  );
+  const itemRewardMessages = grantItemRewards(nextState, action.itemRewards);
 
   recordActionProgress(nextState.progress, action);
+  markOneTimeActionCompleted(nextState, action);
 
   nextState.actionLog = addLog(
     nextState.actionLog,

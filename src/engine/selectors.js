@@ -32,13 +32,27 @@ export function getDiscoveredAreaGroups(areas, unlocks) {
   }));
 }
 
+function isActionUnlocked(action, unlocks) {
+  return action.unlocked !== false || Boolean(unlocks?.actions?.[action.id]);
+}
+
+function isOneTimeActionCompleted(action, unlocks) {
+  if (!action.oneTime) {
+    return false;
+  }
+
+  const completionId = action.completionId || action.id;
+
+  return Boolean(unlocks?.completedActions?.[completionId]);
+}
+
 export function getAvailableActions(actions, currentAreaId, unlocks) {
   return actions.filter((action) => {
     const isInCurrentArea = action.area === currentAreaId;
-    const isUnlocked =
-      action.unlocked !== false || Boolean(unlocks?.actions?.[action.id]);
+    const unlocked = isActionUnlocked(action, unlocks);
+    const completed = isOneTimeActionCompleted(action, unlocks);
 
-    return isInCurrentArea && isUnlocked;
+    return isInCurrentArea && unlocked && !completed;
   });
 }
 

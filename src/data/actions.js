@@ -25,6 +25,7 @@ export const actions = [
     id: "train_with_garron",
     label: "Train with Garron",
     area: "stonefield_house",
+    oneTime: true,
     cost: {
       stamina: 1,
     },
@@ -34,8 +35,7 @@ export const actions = [
         quantity: 1,
       },
     ],
-    log:
-      "You train with Garron.",
+    log: "You train with Garron.",
     story:
       "Garron walks you through the basics, then hands you a simple training stick.",
   },
