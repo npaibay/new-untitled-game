@@ -18,12 +18,22 @@ function clone(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
-function addLog(logList, message) {
-  return [message, ...logList].slice(0, 50);
+function createLogEntry(type, message) {
+  return {
+    type,
+    message,
+  };
+}
+
+function addLog(logList, entry) {
+  return [entry, ...logList].slice(0, 50);
 }
 
 function getActionLog(action, message) {
-  return `Action used: ${action.label}\n${message}`;
+  return createLogEntry(
+    "action",
+    `Action used: ${action.label}\n${message}`
+  );
 }
 
 function isBelowMax(value, max) {
@@ -126,11 +136,6 @@ function markOneTimeActionCompleted(state, action) {
 export function performAction(currentState, action) {
   const nextState = clone(currentState);
 
-  /*
-    Rest action:
-    Starts resting mode.
-    Health and stamina recovery happens in tickSystem.js.
-  */
   if (action.startsResting) {
     if (nextState.player.isResting) {
       nextState.actionLog = addLog(
@@ -162,12 +167,12 @@ export function performAction(currentState, action) {
     return nextState;
   }
 
-  /*
-    Any non-rest action interrupts resting.
-  */
   if (nextState.player.isResting) {
     nextState.player.isResting = false;
-    nextState.actionLog = addLog(nextState.actionLog, "Rest interrupted.");
+    nextState.actionLog = addLog(
+      nextState.actionLog,
+      createLogEntry("system", "Rest interrupted.")
+    );
   }
 
   const { statCost, resourceCost } = getActionCosts(action);

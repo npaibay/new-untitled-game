@@ -117,7 +117,7 @@ function MainPage({
         <Panel title="Action Log">
           <ul className="log-list">
             {actionLog.map((entry, index) => (
-              <li key={`${entry}-${index}`}>{entry}</li>
+              <LogEntry key={getLogKey(entry, index)} entry={entry} />
             ))}
           </ul>
         </Panel>
@@ -132,6 +132,35 @@ function MainPage({
       </div>
     </section>
   );
+}
+
+function LogEntry({ entry }) {
+  const message = getLogMessage(entry);
+  const type = getLogType(entry);
+
+  return <li className={`log-entry log-entry-${type}`}>{message}</li>;
+}
+
+function getLogMessage(entry) {
+  if (typeof entry === "string") {
+    return entry;
+  }
+
+  return entry?.message || "";
+}
+
+function getLogType(entry) {
+  if (typeof entry === "string") {
+    return "default";
+  }
+
+  return entry?.type || "default";
+}
+
+function getLogKey(entry, index) {
+  const message = getLogMessage(entry);
+
+  return `${message}-${index}`;
 }
 
 export default MainPage;

@@ -4,6 +4,13 @@ function getItemById(itemId) {
   return items.find((item) => item.id === itemId) || null;
 }
 
+function createLogEntry(type, message) {
+  return {
+    type,
+    message,
+  };
+}
+
 function formatUnlockLabel(unlockId) {
   return unlockId
     .split("_")
@@ -113,7 +120,13 @@ function applyItemProgression(state, item) {
     unlocks.systems.forEach((systemId) => {
       if (!state.unlocks.systems[systemId]) {
         state.unlocks.systems[systemId] = true;
-        messages.push(`Unlocked: ${formatUnlockLabel(systemId)}.`);
+
+        messages.push(
+          createLogEntry(
+            "unlock",
+            `Unlocked: ${formatUnlockLabel(systemId)}`
+          )
+        );
       }
     });
   }
@@ -146,18 +159,27 @@ export function grantItemRewards(state, itemRewards = []) {
     const item = getItemById(itemId);
 
     if (!item) {
-      messages.push(`Unknown item reward: ${itemId}.`);
+      messages.push(
+        createLogEntry("warning", `Unknown item reward: ${itemId}.`)
+      );
       return;
     }
 
     const result = addItemToInventory(state, item, quantity);
 
     if (result.added) {
-      messages.push(`Obtained: ${item.label}.`);
+      messages.push(
+        createLogEntry(
+          "item_gain",
+          `+${quantity} Obtained item: ${item.label}`
+        )
+      );
     }
 
     if (result.alreadyOwned) {
-      messages.push(`Already obtained: ${item.label}.`);
+      messages.push(
+        createLogEntry("item_info", `Already obtained: ${item.label}.`)
+      );
     }
 
     const progressionMessages = applyItemProgression(state, item);
