@@ -1,6 +1,6 @@
 import { createGameState } from "./createGameState";
 
-export const CURRENT_SAVE_VERSION = 6;
+export const CURRENT_SAVE_VERSION = 7;
 
 function isPlainObject(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value);
@@ -49,7 +49,25 @@ function normalizePlayer(player) {
   player.mp = Math.max(0, player.mp);
   player.stamina = Math.max(0, player.stamina);
 
+  player.attributes = normalizeAttributes(player.attributes);
+
   return player;
+}
+
+function normalizeAttributes(attributes) {
+  const defaultAttributes = createGameState().player.attributes;
+  const normalizedAttributes = isPlainObject(attributes) ? attributes : {};
+
+  return Object.keys(defaultAttributes).reduce((nextAttributes, attribute) => {
+    const value = Number(normalizedAttributes[attribute]);
+
+    nextAttributes[attribute] =
+      Number.isFinite(value) && value >= 0
+        ? Math.floor(value)
+        : defaultAttributes[attribute];
+
+    return nextAttributes;
+  }, {});
 }
 
 export function migrateSaveState(savedState) {

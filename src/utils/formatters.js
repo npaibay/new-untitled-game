@@ -30,3 +30,17 @@ export function formatStatLabel(stat) {
 
   return labels[stat] || stat;
 }
+
+export function formatAttributeLabel(attribute) {
+  const labels = {
+    strength: "Strength",
+    dexterity: "Dexterity",
+    constitution: "Constitution",
+    intelligence: "Intelligence",
+    wisdom: "Wisdom",
+    charisma: "Charisma",
+    luck: "Luck",
+  };
+
+  return labels[attribute] || attribute;
+}

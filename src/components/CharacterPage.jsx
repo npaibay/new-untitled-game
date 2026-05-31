@@ -5,7 +5,10 @@ import {
   getUpgradeLevel,
   isUpgradeMaxed,
 } from "../engine/upgradeSystem";
-import { formatRegenValue } from "../utils/formatters";
+import {
+  formatAttributeLabel,
+  formatRegenValue,
+} from "../utils/formatters";
 import InfoRow from "./ui/InfoRow";
 import StatMeter from "./ui/StatMeter";
 
@@ -26,6 +29,16 @@ const equipmentSlots = [
     id: "accessory3",
     label: "Accessory 3",
   },
+];
+
+const attributeOrder = [
+  "strength",
+  "dexterity",
+  "constitution",
+  "intelligence",
+  "wisdom",
+  "charisma",
+  "luck",
 ];
 
 function CharacterPage({
@@ -53,6 +66,7 @@ function CharacterPage({
     gameState.unlocks?.systems?.combat_basics
   );
   const basicGuardUnlocked = Boolean(gameState.unlocks?.systems?.basic_guard);
+  const attributes = player.attributes || {};
 
   const resolvedInventoryItems = inventoryItems.map((entry) => {
     const itemId = entry.itemId || entry.id;
@@ -123,6 +137,20 @@ function CharacterPage({
                 <InfoRow label="Path" value={player.path} />
                 <InfoRow label="Area" value={currentAreaLabel} />
                 <InfoRow label="Day" value={player.day} />
+              </div>
+            </section>
+
+            <section className="character-card">
+              <h3>Attributes</h3>
+
+              <div className="character-grid">
+                {attributeOrder.map((attribute) => (
+                  <InfoRow
+                    key={attribute}
+                    label={formatAttributeLabel(attribute)}
+                    value={attributes[attribute] ?? 1}
+                  />
+                ))}
               </div>
             </section>
 

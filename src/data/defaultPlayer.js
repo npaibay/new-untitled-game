@@ -17,5 +17,15 @@ export const defaultPlayer = {
   maxStamina: 8,
   staminaRegen: 0.5,
 
+  attributes: {
+    strength: 1,
+    dexterity: 1,
+    constitution: 1,
+    intelligence: 1,
+    wisdom: 1,
+    charisma: 1,
+    luck: 1,
+  },
+
   isResting: false,
 };
