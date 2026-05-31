@@ -14,12 +14,31 @@ export const actions = [
     story: "You take your first true step beyond the quiet safety of the village.",
   },
 
-    {
+  {
     id: "rest_home",
     label: "Rest",
     area: "stonefield_house",
     startsResting: true,
+  },
+
+  {
+    id: "train_with_garron",
+    label: "Train with Garron",
+    area: "stonefield_house",
+    cost: {
+      stamina: 1,
     },
+    itemRewards: [
+      {
+        itemId: "training_stick",
+        quantity: 1,
+      },
+    ],
+    log:
+      "You train with Garron.",
+    story:
+      "Garron walks you through the basics, then hands you a simple training stick.",
+  },
 
   {
     id: "explore_forest_edge",
@@ -55,6 +74,7 @@ export const actions = [
     rewards: {
       herbs: 3,
     },
-    log: "You take your time searching the forest edge and gather a better bundle of herbs."
+    log:
+      "You take your time searching the forest edge and gather a better bundle of herbs.",
   },
 ];

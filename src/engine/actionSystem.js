@@ -12,6 +12,7 @@ import {
 import { processStoryEvents } from "./storySystem";
 import { recordActionProgress } from "./progressSystem";
 import { processUnlocks } from "./unlockSystem";
+import { grantItemRewards } from "./itemSystem";
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
@@ -180,12 +181,21 @@ export function performAction(currentState, action) {
   restoreStats(nextState.player, action.restore);
   addResources(nextState.resources, action.rewards);
 
+  const itemRewardMessages = grantItemRewards(
+    nextState,
+    action.itemRewards
+  );
+
   recordActionProgress(nextState.progress, action);
 
   nextState.actionLog = addLog(
     nextState.actionLog,
     getActionLog(action, action.log || "Action completed.")
   );
+
+  itemRewardMessages.forEach((message) => {
+    nextState.actionLog = addLog(nextState.actionLog, message);
+  });
 
   if (action.story) {
     nextState.storyLog = addLog(nextState.storyLog, action.story);

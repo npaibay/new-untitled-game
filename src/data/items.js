@@ -9,8 +9,10 @@ export const items = [
     description:
       "A simple wooden stick. It is not much of a weapon, but it is familiar and easy to hold.",
     progression: {
-      unlocks: ["combat_basics"],
       flags: ["has_training_stick"],
+      unlocks: {
+        systems: ["combat_basics"],
+      },
     },
   },
   {
@@ -44,8 +46,7 @@ export const items = [
     type: "key_item",
     rarity: "common",
     category: "???",
-    description:
-      "It looks important. It is probably not. Probably.",
+    description: "It looks important. It is probably not. Probably.",
     progression: {
       flags: ["has_suspicious_pebble"],
     },
