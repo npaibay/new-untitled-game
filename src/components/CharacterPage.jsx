@@ -2,6 +2,7 @@ import { items } from "../data/items";
 import {
   formatDerivedCombatStatValue,
   getDerivedCombatStats,
+  getEquipmentBonusTotals,
 } from "../engine/derivedStats";
 import {
   formatResourceCost,
@@ -35,8 +36,6 @@ const equipmentSlots = [
     label: "Accessory 3",
   },
 ];
-
-const accessorySlots = ["accessory1", "accessory2", "accessory3"];
 
 const attributeOrder = [
   "strength",
@@ -89,6 +88,7 @@ function CharacterPage({
   const basicGuardUnlocked = Boolean(gameState.unlocks?.systems?.basic_guard);
   const attributes = player.attributes || {};
   const derivedCombatStats = getDerivedCombatStats(player, gameState);
+  const equipmentBonusTotals = getEquipmentBonusTotals(gameState);
 
   const resolvedInventoryItems = inventoryItems.map((entry) => {
     const itemId = entry.itemId || entry.id;
@@ -295,11 +295,33 @@ function CharacterPage({
             </section>
 
             <section className="character-card character-card-wide">
+              <h3>Equipment Bonuses</h3>
+
+              <div className="character-grid">
+                {Object.keys(equipmentBonusTotals).length > 0 ? (
+                  Object.entries(equipmentBonusTotals).map(([statId, amount]) => (
+                    <InfoRow
+                      key={statId}
+                      label={formatDerivedCombatStatLabel(statId)}
+                      value={`+${formatDerivedCombatStatValue(statId, amount)}`}
+                      highlight
+                    />
+                  ))
+                ) : (
+                  <p className="empty-note">
+                    No equipment bonuses are active.
+                  </p>
+                )}
+              </div>
+            </section>
+
+            <section className="character-card character-card-wide">
               <h3>Combat Notes</h3>
 
               <p className="empty-note">
                 These stats are calculated from attributes, combat training,
-                and combat unlocks. They do not affect battle yet.
+                combat unlocks, and equipped item bonuses. They do not affect
+                battle yet.
               </p>
             </section>
           </>
@@ -368,6 +390,8 @@ function CharacterPage({
                         <>
                           <strong>{equippedItem.label}</strong>
                           <p>{equippedItem.description}</p>
+
+                          <EquipmentBonusText item={equippedItem} />
 
                           <button
                             type="button"
@@ -453,6 +477,8 @@ function InventorySection({ title, items, equipment, onEquipItem }) {
                 <strong>{item.label}</strong>
                 <p>{item.description}</p>
 
+                <EquipmentBonusText item={item} />
+
                 {equippedSlotId && (
                   <p className="empty-note">
                     Equipped in {formatEquipmentSlotLabel(equippedSlotId)}.
@@ -484,14 +510,41 @@ function InventorySection({ title, items, equipment, onEquipItem }) {
   );
 }
 
+function EquipmentBonusText({ item }) {
+  const bonuses = formatEquipmentBonuses(item.equipmentBonuses);
+
+  if (bonuses.length === 0) {
+    return null;
+  }
+
+  return (
+    <p className="empty-note">
+      Bonuses: {bonuses.join(", ")}
+    </p>
+  );
+}
+
+function formatEquipmentBonuses(equipmentBonuses = {}) {
+  return Object.entries(equipmentBonuses).map(([statId, amount]) => {
+    const sign = amount >= 0 ? "+" : "";
+
+    return `${sign}${formatDerivedCombatStatValue(
+      statId,
+      amount
+    )} ${formatDerivedCombatStatLabel(statId)}`;
+  });
+}
+
 function getEquippedSlotId(equipment, itemId) {
   if (!equipment) {
     return null;
   }
 
-  return Object.entries(equipment).find(([, equippedItemId]) => {
-    return equippedItemId === itemId;
-  })?.[0] || null;
+  return (
+    Object.entries(equipment).find(([, equippedItemId]) => {
+      return equippedItemId === itemId;
+    })?.[0] || null
+  );
 }
 
 function formatEquipmentSlotLabel(slotId) {

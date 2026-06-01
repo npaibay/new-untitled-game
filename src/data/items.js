@@ -8,6 +8,10 @@ export const items = [
     category: "Training Gear",
     description:
       "A simple wooden stick. It is not much of a weapon, but it is familiar and easy to hold.",
+    equipmentBonuses: {
+      attackPower: 1,
+      guardPower: 1,
+    },
     progression: {
       flags: ["has_training_stick"],
       unlocks: {
@@ -24,6 +28,10 @@ export const items = [
     category: "Starter Gear",
     description:
       "A small charm tied with old thread. It does not seem powerful, but it feels important.",
+    equipmentBonuses: {
+      focus: 1,
+      resolve: 1,
+    },
     progression: {
       flags: ["has_threadbare_charm"],
     },
