@@ -8,6 +8,7 @@ import { upgrades } from "./data/upgrades";
 import { createGameState } from "./engine/createGameState";
 import { performAction } from "./engine/actionSystem";
 import { moveToArea } from "./engine/areaSystem";
+import { equipItem, unequipSlot } from "./engine/equipmentSystem";
 import {
   getAvailableActions,
   getAreaById,
@@ -96,6 +97,16 @@ function App() {
 
   function handlePurchaseUpgrade(upgrade) {
     setGameState((currentState) => purchaseUpgrade(currentState, upgrade));
+  }
+
+  function handleEquipItem(itemId, preferredSlotId = null) {
+    setGameState((currentState) =>
+      equipItem(currentState, itemId, preferredSlotId)
+    );
+  }
+
+  function handleUnequipSlot(slotId) {
+    setGameState((currentState) => unequipSlot(currentState, slotId));
   }
 
   function handleMoveToArea(area) {
@@ -218,6 +229,8 @@ function App() {
             activeTab={characterTab}
             onChangeTab={setCharacterTab}
             onPurchaseUpgrade={handlePurchaseUpgrade}
+            onEquipItem={handleEquipItem}
+            onUnequipSlot={handleUnequipSlot}
           />
         )}
       </main>

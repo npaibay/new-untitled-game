@@ -36,6 +36,8 @@ const equipmentSlots = [
   },
 ];
 
+const accessorySlots = ["accessory1", "accessory2", "accessory3"];
+
 const attributeOrder = [
   "strength",
   "dexterity",
@@ -67,6 +69,8 @@ function CharacterPage({
   activeTab,
   onChangeTab,
   onPurchaseUpgrade,
+  onEquipItem,
+  onUnequipSlot,
 }) {
   const itemMap = new Map(items.map((item) => [item.id, item]));
 
@@ -364,6 +368,13 @@ function CharacterPage({
                         <>
                           <strong>{equippedItem.label}</strong>
                           <p>{equippedItem.description}</p>
+
+                          <button
+                            type="button"
+                            onClick={() => onUnequipSlot(slot.id)}
+                          >
+                            Unequip
+                          </button>
                         </>
                       ) : (
                         <>
@@ -383,6 +394,8 @@ function CharacterPage({
               <InventorySection
                 title="Equipment Items"
                 items={equipmentInventoryItems}
+                equipment={equipment}
+                onEquipItem={onEquipItem}
               />
 
               <InventorySection title="Key Items" items={keyItems} />
@@ -402,7 +415,7 @@ function CharacterPage({
   );
 }
 
-function InventorySection({ title, items }) {
+function InventorySection({ title, items, equipment, onEquipItem }) {
   if (items.length === 0) {
     return (
       <div className="inventory-section">
@@ -431,11 +444,20 @@ function InventorySection({ title, items }) {
             );
           }
 
+          const equippedSlotId = getEquippedSlotId(equipment, item.id);
+          const canEquip = item.type === "equipment" && !equippedSlotId;
+
           return (
             <div key={item.id} className="inventory-item">
               <div>
                 <strong>{item.label}</strong>
                 <p>{item.description}</p>
+
+                {equippedSlotId && (
+                  <p className="empty-note">
+                    Equipped in {formatEquipmentSlotLabel(equippedSlotId)}.
+                  </p>
+                )}
               </div>
 
               <div className="inventory-item-meta">
@@ -444,6 +466,15 @@ function InventorySection({ title, items }) {
                 </span>
                 <span className="item-type-pill">{item.category}</span>
                 <span className="item-type-pill">x{quantity}</span>
+
+                {canEquip && (
+                  <button
+                    type="button"
+                    onClick={() => onEquipItem(item.id)}
+                  >
+                    Equip
+                  </button>
+                )}
               </div>
             </div>
           );
@@ -451,6 +482,22 @@ function InventorySection({ title, items }) {
       </div>
     </div>
   );
+}
+
+function getEquippedSlotId(equipment, itemId) {
+  if (!equipment) {
+    return null;
+  }
+
+  return Object.entries(equipment).find(([, equippedItemId]) => {
+    return equippedItemId === itemId;
+  })?.[0] || null;
+}
+
+function formatEquipmentSlotLabel(slotId) {
+  const slot = equipmentSlots.find((entry) => entry.id === slotId);
+
+  return slot?.label || slotId;
 }
 
 function formatItemType(item) {
