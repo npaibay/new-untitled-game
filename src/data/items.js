@@ -37,6 +37,21 @@ export const items = [
     },
   },
   {
+    id: "simple_poultice",
+    label: "Simple Poultice",
+    type: "consumable",
+    rarity: "common",
+    category: "Medicine",
+    description:
+      "A small herbal poultice prepared for minor scrapes and fatigue.",
+    useEffects: {
+      restore: {
+        hp: 3,
+        stamina: 2,
+      },
+    },
+  },
+  {
     id: "worn_cloak",
     label: "Worn Cloak",
     type: "key_item",
@@ -66,6 +81,10 @@ export const starterInventory = {
     {
       itemId: "threadbare_charm",
       quantity: 1,
+    },
+    {
+      itemId: "simple_poultice",
+      quantity: 2,
     },
     {
       itemId: "worn_cloak",

@@ -9,6 +9,7 @@ import { createGameState } from "./engine/createGameState";
 import { performAction } from "./engine/actionSystem";
 import { moveToArea } from "./engine/areaSystem";
 import { equipItem, unequipSlot } from "./engine/equipmentSystem";
+import { useInventoryItem } from "./engine/itemSystem";
 import {
   getAvailableActions,
   getAreaById,
@@ -107,6 +108,10 @@ function App() {
 
   function handleUnequipSlot(slotId) {
     setGameState((currentState) => unequipSlot(currentState, slotId));
+  }
+
+  function handleUseItem(itemId) {
+    setGameState((currentState) => useInventoryItem(currentState, itemId));
   }
 
   function handleMoveToArea(area) {
@@ -231,6 +236,7 @@ function App() {
             onPurchaseUpgrade={handlePurchaseUpgrade}
             onEquipItem={handleEquipItem}
             onUnequipSlot={handleUnequipSlot}
+            onUseItem={handleUseItem}
           />
         )}
       </main>

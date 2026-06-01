@@ -11,6 +11,18 @@ function createLogEntry(type, message) {
   };
 }
 
+function addLog(logList, entry) {
+  return [entry, ...logList].slice(0, 50);
+}
+
+function addLogsInDisplayOrder(logList, entries) {
+  return [...entries, ...logList].slice(0, 50);
+}
+
+function clone(value) {
+  return JSON.parse(JSON.stringify(value));
+}
+
 function formatUnlockLabel(unlockId) {
   return unlockId
     .split("_")
@@ -18,6 +30,26 @@ function formatUnlockLabel(unlockId) {
       return word.charAt(0).toUpperCase() + word.slice(1);
     })
     .join(" ");
+}
+
+function formatStatName(stat) {
+  const statNames = {
+    hp: "Health",
+    mp: "Mana",
+    stamina: "Stamina",
+  };
+
+  return statNames[stat] || stat;
+}
+
+function formatAmount(value) {
+  const rounded = Math.round(value * 10) / 10;
+
+  return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+}
+
+function getMaxStatName(stat) {
+  return `max${stat.charAt(0).toUpperCase()}${stat.slice(1)}`;
 }
 
 function ensureInventory(state) {
@@ -62,6 +94,24 @@ function isStackableItem(item) {
   return item.type !== "equipment" && item.type !== "key_item";
 }
 
+function findInventoryEntryIndex(state, itemId) {
+  ensureInventory(state);
+
+  return state.inventory.items.findIndex((entry) => {
+    return (entry.itemId || entry.id) === itemId;
+  });
+}
+
+function getInventoryEntry(state, itemId) {
+  const entryIndex = findInventoryEntryIndex(state, itemId);
+
+  if (entryIndex < 0) {
+    return null;
+  }
+
+  return state.inventory.items[entryIndex];
+}
+
 function addItemToInventory(state, item, quantity = 1) {
   ensureInventory(state);
 
@@ -96,6 +146,26 @@ function addItemToInventory(state, item, quantity = 1) {
     added: true,
     alreadyOwned: false,
   };
+}
+
+function removeItemFromInventory(state, itemId, quantity = 1) {
+  const entryIndex = findInventoryEntryIndex(state, itemId);
+
+  if (entryIndex < 0) {
+    return false;
+  }
+
+  const entry = state.inventory.items[entryIndex];
+  const currentQuantity = entry.quantity ?? 1;
+  const nextQuantity = currentQuantity - quantity;
+
+  if (nextQuantity > 0) {
+    entry.quantity = nextQuantity;
+  } else {
+    state.inventory.items.splice(entryIndex, 1);
+  }
+
+  return true;
 }
 
 function applyItemProgression(state, item) {
@@ -146,6 +216,75 @@ function applyItemProgression(state, item) {
   return messages;
 }
 
+function canRestoreAnyStat(player, restore = {}) {
+  return Object.entries(restore).some(([stat]) => {
+    const maxStat = getMaxStatName(stat);
+
+    if (typeof player[stat] !== "number") {
+      return false;
+    }
+
+    if (typeof player[maxStat] !== "number") {
+      return false;
+    }
+
+    return player[stat] < player[maxStat] - 0.001;
+  });
+}
+
+function canApplyUseEffects(state, useEffects = {}) {
+  const restore = useEffects.restore || {};
+
+  if (Object.keys(restore).length > 0) {
+    return canRestoreAnyStat(state.player, restore);
+  }
+
+  return false;
+}
+
+function applyRestoreEffects(player, restore = {}) {
+  const messages = [];
+
+  Object.entries(restore).forEach(([stat, amount]) => {
+    const maxStat = getMaxStatName(stat);
+
+    if (typeof player[stat] !== "number") {
+      return;
+    }
+
+    if (typeof player[maxStat] !== "number") {
+      return;
+    }
+
+    const before = player[stat];
+    const after = Math.min(player[maxStat], before + amount);
+    const restoredAmount = after - before;
+
+    player[stat] = after;
+
+    if (restoredAmount > 0) {
+      messages.push(
+        createLogEntry(
+          "item_info",
+          `Restored ${formatStatName(stat)}: +${formatAmount(restoredAmount)}.`
+        )
+      );
+    }
+  });
+
+  return messages;
+}
+
+function applyUseEffects(state, useEffects = {}) {
+  const messages = [];
+
+  if (useEffects.restore) {
+    messages.push(...applyRestoreEffects(state.player, useEffects.restore));
+  }
+
+  return messages;
+}
+
 export function grantItemRewards(state, itemRewards = []) {
   if (!Array.isArray(itemRewards) || itemRewards.length === 0) {
     return [];
@@ -187,4 +326,67 @@ export function grantItemRewards(state, itemRewards = []) {
   });
 
   return messages;
+}
+
+export function useInventoryItem(currentState, itemId) {
+  const nextState = clone(currentState);
+  const item = getItemById(itemId);
+
+  ensureInventory(nextState);
+
+  if (!item) {
+    nextState.actionLog = addLog(
+      nextState.actionLog,
+      createLogEntry("warning", `Unknown item: ${itemId}.`)
+    );
+
+    return nextState;
+  }
+
+  if (item.type !== "consumable") {
+    nextState.actionLog = addLog(
+      nextState.actionLog,
+      createLogEntry("warning", `${item.label} cannot be used.`)
+    );
+
+    return nextState;
+  }
+
+  const inventoryEntry = getInventoryEntry(nextState, item.id);
+
+  if (!inventoryEntry || (inventoryEntry.quantity ?? 1) <= 0) {
+    nextState.actionLog = addLog(
+      nextState.actionLog,
+      createLogEntry("warning", `You do not have ${item.label}.`)
+    );
+
+    return nextState;
+  }
+
+  const useEffects = item.useEffects || {};
+
+  if (!canApplyUseEffects(nextState, useEffects)) {
+    nextState.actionLog = addLog(
+      nextState.actionLog,
+      createLogEntry("system", `${item.label} has no effect right now.`)
+    );
+
+    return nextState;
+  }
+
+  const effectMessages = applyUseEffects(nextState, useEffects);
+  removeItemFromInventory(nextState, item.id, 1);
+
+  const logEntries = [
+    createLogEntry("item_info", `Used item: ${item.label}`),
+    ...effectMessages,
+    createLogEntry("item_loss", `-1 Consumed item: ${item.label}`),
+  ];
+
+  nextState.actionLog = addLogsInDisplayOrder(
+    nextState.actionLog,
+    logEntries
+  );
+
+  return nextState;
 }

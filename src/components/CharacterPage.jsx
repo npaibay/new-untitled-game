@@ -14,6 +14,7 @@ import {
   formatAttributeLabel,
   formatDerivedCombatStatLabel,
   formatRegenValue,
+  formatStatLabel,
 } from "../utils/formatters";
 import InfoRow from "./ui/InfoRow";
 import StatMeter from "./ui/StatMeter";
@@ -70,6 +71,7 @@ function CharacterPage({
   onPurchaseUpgrade,
   onEquipItem,
   onUnequipSlot,
+  onUseItem,
 }) {
   const itemMap = new Map(items.map((item) => [item.id, item]));
 
@@ -104,6 +106,10 @@ function CharacterPage({
 
   const equipmentInventoryItems = resolvedInventoryItems.filter(({ item }) => {
     return item?.type === "equipment";
+  });
+
+  const consumableItems = resolvedInventoryItems.filter(({ item }) => {
+    return item?.type === "consumable";
   });
 
   const keyItems = resolvedInventoryItems.filter(({ item }) => {
@@ -420,6 +426,13 @@ function CharacterPage({
                 items={equipmentInventoryItems}
                 equipment={equipment}
                 onEquipItem={onEquipItem}
+                onUseItem={onUseItem}
+              />
+
+              <InventorySection
+                title="Consumables"
+                items={consumableItems}
+                onUseItem={onUseItem}
               />
 
               <InventorySection title="Key Items" items={keyItems} />
@@ -439,7 +452,13 @@ function CharacterPage({
   );
 }
 
-function InventorySection({ title, items, equipment, onEquipItem }) {
+function InventorySection({
+  title,
+  items,
+  equipment,
+  onEquipItem,
+  onUseItem,
+}) {
   if (items.length === 0) {
     return (
       <div className="inventory-section">
@@ -470,6 +489,7 @@ function InventorySection({ title, items, equipment, onEquipItem }) {
 
           const equippedSlotId = getEquippedSlotId(equipment, item.id);
           const canEquip = item.type === "equipment" && !equippedSlotId;
+          const canUse = item.type === "consumable";
 
           return (
             <div key={item.id} className="inventory-item">
@@ -478,6 +498,7 @@ function InventorySection({ title, items, equipment, onEquipItem }) {
                 <p>{item.description}</p>
 
                 <EquipmentBonusText item={item} />
+                <UseEffectText item={item} />
 
                 {equippedSlotId && (
                   <p className="empty-note">
@@ -499,6 +520,15 @@ function InventorySection({ title, items, equipment, onEquipItem }) {
                     onClick={() => onEquipItem(item.id)}
                   >
                     Equip
+                  </button>
+                )}
+
+                {canUse && (
+                  <button
+                    type="button"
+                    onClick={() => onUseItem(item.id)}
+                  >
+                    Use
                   </button>
                 )}
               </div>
@@ -524,6 +554,20 @@ function EquipmentBonusText({ item }) {
   );
 }
 
+function UseEffectText({ item }) {
+  const useEffects = formatUseEffects(item.useEffects);
+
+  if (useEffects.length === 0) {
+    return null;
+  }
+
+  return (
+    <p className="empty-note">
+      Use: {useEffects.join(", ")}
+    </p>
+  );
+}
+
 function formatEquipmentBonuses(equipmentBonuses = {}) {
   return Object.entries(equipmentBonuses).map(([statId, amount]) => {
     const sign = amount >= 0 ? "+" : "";
@@ -532,6 +576,14 @@ function formatEquipmentBonuses(equipmentBonuses = {}) {
       statId,
       amount
     )} ${formatDerivedCombatStatLabel(statId)}`;
+  });
+}
+
+function formatUseEffects(useEffects = {}) {
+  const restore = useEffects.restore || {};
+
+  return Object.entries(restore).map(([stat, amount]) => {
+    return `Restores +${amount} ${formatStatLabel(stat)}`;
   });
 }
 
