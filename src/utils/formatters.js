@@ -44,3 +44,19 @@ export function formatAttributeLabel(attribute) {
 
   return labels[attribute] || attribute;
 }
+
+export function formatDerivedCombatStatLabel(statId) {
+  const labels = {
+    attackPower: "Attack Power",
+    defense: "Defense",
+    guardPower: "Guard Power",
+    accuracy: "Accuracy",
+    evasion: "Evasion",
+    criticalChance: "Critical Chance",
+    initiative: "Initiative",
+    focus: "Focus",
+    resolve: "Resolve",
+  };
+
+  return labels[statId] || statId;
+}

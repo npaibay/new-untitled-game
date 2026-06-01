@@ -1,5 +1,9 @@
 import { items } from "../data/items";
 import {
+  formatDerivedCombatStatValue,
+  getDerivedCombatStats,
+} from "../engine/derivedStats";
+import {
   formatResourceCost,
   getNextUpgradeCost,
   getUpgradeLevel,
@@ -7,6 +11,7 @@ import {
 } from "../engine/upgradeSystem";
 import {
   formatAttributeLabel,
+  formatDerivedCombatStatLabel,
   formatRegenValue,
 } from "../utils/formatters";
 import InfoRow from "./ui/InfoRow";
@@ -41,6 +46,18 @@ const attributeOrder = [
   "luck",
 ];
 
+const derivedCombatStatOrder = [
+  "attackPower",
+  "defense",
+  "guardPower",
+  "accuracy",
+  "evasion",
+  "criticalChance",
+  "initiative",
+  "focus",
+  "resolve",
+];
+
 function CharacterPage({
   player,
   resources,
@@ -67,6 +84,7 @@ function CharacterPage({
   );
   const basicGuardUnlocked = Boolean(gameState.unlocks?.systems?.basic_guard);
   const attributes = player.attributes || {};
+  const derivedCombatStats = getDerivedCombatStats(player, gameState);
 
   const resolvedInventoryItems = inventoryItems.map((entry) => {
     const itemId = entry.itemId || entry.id;
@@ -95,7 +113,7 @@ function CharacterPage({
   return (
     <section className="character-page-panel">
       <div className="panel-header">
-        <h2>Character Overview</h2>
+        <h2>Character</h2>
       </div>
 
       <div className="character-page-tabs">
@@ -105,6 +123,14 @@ function CharacterPage({
           onClick={() => onChangeTab("overview")}
         >
           Overview
+        </button>
+
+        <button
+          type="button"
+          className={activeTab === "combat" ? "primary" : ""}
+          onClick={() => onChangeTab("combat")}
+        >
+          Combat
         </button>
 
         <button
@@ -191,31 +217,6 @@ function CharacterPage({
             </section>
 
             <section className="character-card">
-              <h3>Combat Foundation</h3>
-
-              <div className="character-grid">
-                <InfoRow
-                  label="Combat Basics"
-                  value={combatBasicsUnlocked ? "Unlocked" : "Locked"}
-                />
-                <InfoRow
-                  label="Combat Training"
-                  value={combatTraining}
-                  highlight={combatTraining > 0}
-                />
-                <InfoRow
-                  label="Training Rank"
-                  value={getCombatTrainingRank(combatTraining)}
-                />
-                <InfoRow
-                  label="Basic Guard"
-                  value={basicGuardUnlocked ? "Learned" : "Not learned"}
-                  highlight={basicGuardUnlocked}
-                />
-              </div>
-            </section>
-
-            <section className="character-card">
               <h3>Resources</h3>
 
               <InfoRow
@@ -235,6 +236,67 @@ function CharacterPage({
               {discoveredResources.length === 0 && (
                 <p className="empty-note">No other resources discovered.</p>
               )}
+            </section>
+          </>
+        )}
+
+        {activeTab === "combat" && (
+          <>
+            <section className="character-card">
+              <h3>Combat Foundation</h3>
+
+              <div className="character-grid">
+                <InfoRow
+                  label="Combat Basics"
+                  value={combatBasicsUnlocked ? "Unlocked" : "Locked"}
+                  highlight={combatBasicsUnlocked}
+                />
+                <InfoRow
+                  label="Combat Training"
+                  value={combatTraining}
+                  highlight={combatTraining > 0}
+                />
+                <InfoRow
+                  label="Training Rank"
+                  value={getCombatTrainingRank(combatTraining)}
+                />
+                <InfoRow
+                  label="Basic Guard"
+                  value={basicGuardUnlocked ? "Learned" : "Not learned"}
+                  highlight={basicGuardUnlocked}
+                />
+              </div>
+            </section>
+
+            <section className="character-card">
+              <h3>Derived Combat Stats</h3>
+
+              <div className="character-grid">
+                {derivedCombatStatOrder.map((statId) => (
+                  <InfoRow
+                    key={statId}
+                    label={formatDerivedCombatStatLabel(statId)}
+                    value={formatDerivedCombatStatValue(
+                      statId,
+                      derivedCombatStats[statId]
+                    )}
+                    highlight={
+                      statId === "attackPower" ||
+                      statId === "defense" ||
+                      statId === "guardPower"
+                    }
+                  />
+                ))}
+              </div>
+            </section>
+
+            <section className="character-card character-card-wide">
+              <h3>Combat Notes</h3>
+
+              <p className="empty-note">
+                These stats are calculated from attributes, combat training,
+                and combat unlocks. They do not affect battle yet.
+              </p>
             </section>
           </>
         )}
